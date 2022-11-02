@@ -17,7 +17,7 @@ def find_shot(target_a, target_b, ball_location, car_location):
     offset_ball_location = ball_location - (direction_of_approach * 92.75)
 
     try:
-        side_of_approach_direction =  sign(
+        side_of_approach_direction = sign(
             (ball_location - car_location).dot(direction_of_approach.cross(Vec3(0, 0, 1))))
         car_to_ball_perpendicular = car_to_ball.cross(Vec3(0, 0, side_of_approach_direction)).normalized()
         adjustment = abs(car_to_ball.flat().ang_to(direction_of_approach.flat())) * 2560
@@ -72,3 +72,65 @@ class PIDController:
         self.d_value = error
         self.i_value += error
         return p + i + d
+
+
+def clip_to_field(location: Vec3):
+    # Check field
+    mid_p = Vec3(5120, 4096, 2044)
+    mid_n = Vec3(-5120, -4096, 0)
+    # mid = check_valid_location(location, mid_p, mid_n)
+
+    # Check goals
+    # goal_p = Vec3(893, 6000, 642)
+    # goal_n = Vec3(-893, -6000, 0)
+    # goal = check_valid_location(location, goal_p, goal_n)
+
+    # if sum(mid) > sum(goal):
+    #     return clip_to_box(location, mid_p, mid_n)
+    # elif sum(goal) > sum(mid):
+    #     return clip_to_box(location, goal_p, mid_p)
+    return clip_to_box(location, mid_p, mid_n)
+
+
+def clip_to_box(location, box_p, box_n):
+    """
+
+    :param Vec3 location:
+    :param Vec3 box_p:
+    :param Vec3 box_n:
+    """
+
+    def clip_within_box(value, corner_a, corner_b):
+        if value > corner_a:
+            return corner_a
+        elif value < corner_b:
+            return corner_b
+        return value
+
+    x = clip_within_box(location.x, box_p.x, box_n.x)
+    y = clip_within_box(location.y, box_p.y, box_n.y)
+    z = clip_within_box(location.z, box_p.z, box_n.z)
+    return Vec3(x, y, z)
+
+
+def check_valid_location(location, box_p, box_n):
+    """
+
+    :param Vec3 location:
+    :param Vec3 box_p:
+    :param Vec3 box_n:
+    """
+
+    def check_within_box(check, corner_a, corner_b):
+        """
+
+        :param float check:
+        :param float corner_a:
+        :param float corner_b:
+        """
+        return corner_a > check > corner_b
+
+    x = check_within_box(location.x, box_p.x, box_n.x)
+    y = check_within_box(location.y, box_p.y, box_n.y)
+    z = check_within_box(location.z, box_p.z, box_n.z)
+    return x, y, z
