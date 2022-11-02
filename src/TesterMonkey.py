@@ -3,8 +3,7 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from tools.helper import find_shot, PIDController, clip_to_field, get_target_goal, get_required_speed
-from util.ball_prediction_analysis import find_slice_at_time
+from tools.helper import find_shot, PIDController, clip_to_field, get_target_goal, get_required_speed, predict_ball_fall
 from util.boost_pad_tracker import BoostPadTracker
 from util.drive import limit_to_safe_range
 from util.orientation import Orientation, relative_location
@@ -63,33 +62,20 @@ class MyBot(BaseAgent):
         # By default, we will chase the ball, but target_location can be changed later
         target_location = find_shot(target_goal_a, target_goal_b, ball_location, car_location)
 
-        ball_prediction_struct = self.get_ball_prediction_struct()  # This can predict bounces, etc
-
         if packet.game_info.is_kickoff_pause:
             return self.do_kickoff(ball_location, car_location, car_orientation, packet)
 
-        ball_approach_time = 0.1
-        ball_prediction = ball_location
         if ball_location.z > 200:
             # When the ball is in the air wait for it to come down.
             # We're far away from the ball, let's try to lead it a little
-            for i in range(50):
-                ball_in_future = find_slice_at_time(
-                    ball_prediction_struct, packet.game_info.seconds_elapsed + 0.1 * i)
-                if ball_in_future is None:
-                    break
-                new_ball_prediction = Vec3(ball_in_future.physics.location)
-                if new_ball_prediction.z < ball_prediction.z:
-                    ball_prediction = new_ball_prediction
-                elif ball_prediction.z < 200:
-                    ball_approach_time = 0.1 * i
-                    ball_prediction_distance = ball_prediction.length()
-                    approach_speed = ball_prediction_distance / ball_approach_time
-                    if approach_speed > 1400:
-                        continue
-                    break
+            ball_prediction_struct = self.get_ball_prediction_struct()
+            ball_approach_time, ball_prediction = predict_ball_fall(
+                ball_location, ball_prediction_struct, packet)
             target_location = find_shot(target_goal_a, target_goal_b, ball_prediction, car_location)
             ball_prediction = target_location
+        else:
+            ball_approach_time = 0.1
+            ball_prediction = ball_location
 
         target_location = clip_to_field(target_location)
         target_relative = relative_location(car_location, car_orientation, target_location)

@@ -3,7 +3,7 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket, FieldInfoPacket, GoalInfo
 
-from tools.helper import find_shot, PIDController, find_boost_in_path, clip_to_field
+from tools.helper import find_shot, PIDController, find_boost_in_path, clip_to_field, predict_ball_fall
 from tools.performance import TickMonitor
 from util.ball_prediction_analysis import find_slice_at_time
 from util.boost_pad_tracker import BoostPadTracker
@@ -126,25 +126,14 @@ class MyBot(BaseAgent):
         if ball_location.z > 200:
             # When the ball is in the air wait for it to come down.
             # We're far away from the ball, let's try to lead it a little
-            ball_prediction_struct = self.get_ball_prediction_struct()  # This can predict bounces, etc
-            ball_prediction = ball_location
-            for i in range(50):
-                ball_in_future = find_slice_at_time(
-                    ball_prediction_struct, packet.game_info.seconds_elapsed + 0.2 * i)
-                if ball_in_future is None:
-                    break
-                new_ball_prediction = Vec3(ball_in_future.physics.location)
-                if new_ball_prediction.z < ball_prediction.z:
-                    ball_prediction = new_ball_prediction
-                elif ball_prediction.z < 200:
-                    ball_time = 0.1 * i
-                    ball_prediction_distance = ball_prediction.length()
-                    approach_speed = ball_prediction_distance / ball_time
-                    if approach_speed > 1400:
-                        continue
-                    break
-            self.renderer.draw_rect_3d(ball_prediction, 8, 8, True, self.renderer.pink(), centered=True)
+            ball_prediction_struct = self.get_ball_prediction_struct()
+            ball_approach_time, ball_prediction = predict_ball_fall(
+                ball_location, ball_prediction_struct, packet)
             target_location = find_shot(target_goal_a, target_goal_b, ball_prediction, car_location)
+            ball_prediction = target_location
+        else:
+            ball_approach_time = 0.1
+            ball_prediction = ball_location
 
         target_location = clip_to_field(target_location)
 
@@ -152,6 +141,7 @@ class MyBot(BaseAgent):
         self.renderer.draw_line_3d(car_location, target_location, self.renderer.white())
         self.renderer.draw_string_3d(car_location, 1, 1, f'Speed: {car_velocity.length():.1f}', self.renderer.white())
         self.renderer.draw_rect_3d(target_location, 8, 8, True, self.renderer.cyan(), centered=True)
+        self.renderer.draw_rect_3d(ball_prediction, 8, 8, True, self.renderer.pink(), centered=True)
 
         line_coord_a = ball_location
         for i in range(50):

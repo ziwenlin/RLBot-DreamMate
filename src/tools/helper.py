@@ -1,3 +1,4 @@
+from util.ball_prediction_analysis import find_slice_at_time
 from util.boost_pad_tracker import BoostPadTracker
 from util.vec import Vec3
 
@@ -200,3 +201,28 @@ def find_boost_in_path(car, target, boost_map):
     if closest_boost is None:
         return None
     return closest_boost[0].location
+
+
+def predict_ball_fall(ball_prediction, ball_prediction_struct, packet):
+    game_time = packet.game_info.seconds_elapsed
+    ball_approach_time = 0.1
+    for i in range(50):
+        ball_in_future = find_slice_at_time(
+            ball_prediction_struct, game_time + 0.1 * i)
+        if ball_in_future is None:
+            # There is nothing to predict
+            break
+        # Convert the location to Vec3
+        new_ball_prediction = Vec3(ball_in_future.physics.location)
+        if new_ball_prediction.z < ball_prediction.z:
+            # The new prediction needs to be lower than the previous prediction
+            ball_prediction = new_ball_prediction
+        elif ball_prediction.z < 200:
+            ball_approach_time = 0.1 * i
+            ball_prediction_distance = ball_prediction.length()
+            approach_speed = ball_prediction_distance / ball_approach_time
+            if approach_speed > 800:
+                continue
+            ball_prediction = new_ball_prediction
+            break
+    return ball_approach_time, ball_prediction
