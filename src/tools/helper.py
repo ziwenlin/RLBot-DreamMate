@@ -1,3 +1,4 @@
+from util.boost_pad_tracker import BoostPadTracker
 from util.vec import Vec3
 
 
@@ -158,9 +159,9 @@ def get_required_speed(time_remaining, distance_remaining):
 def find_boost_in_path(car, target, boost_map):
     """
 
-    :type boost_map: BoostPadTracker
-    :type target: Vec3
-    :type car: Vec3
+    :param BoostPadTracker boost_map:
+    :param Vec3 target:
+    :param Vec3 car:
     """
 
     distance_car_to_target = car.dist(target)
@@ -169,7 +170,7 @@ def find_boost_in_path(car, target, boost_map):
         distance_to_target = pad.location.dist(target)
         distance_to_car = pad.location.dist(car)
         if not pad.is_active:
-            # Skip non active boost pads
+            # Skip non-active boost pads
             continue
         if pad.is_full_boost:
             # Give a bit more priority to full boost
