@@ -3,7 +3,7 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket, FieldInfoPacket, GoalInfo
 
-from tools.helper import find_shot, PIDController, find_boost_in_path, clip_to_field, predict_ball_fall
+from tools.helper import find_shot, PIDController, find_boost_in_path, clip_to_field, predict_ball_fall, get_target_goal
 from tools.performance import TickMonitor
 from util.ball_prediction_analysis import find_slice_at_time
 from util.boost_pad_tracker import BoostPadTracker
@@ -91,12 +91,7 @@ class MyBot(BaseAgent):
             ball_prediction = Vec3(ball_in_future.physics.location)
             self.renderer.draw_rect_3d(ball_prediction, 8, 8, True, self.renderer.red(), centered=True)
 
-        if self.team == 0:
-            target_goal_a = Vec3(800, 5213, 321)
-            target_goal_b = Vec3(-800, 5213, 321)
-        else:
-            target_goal_a = Vec3(-800, -5213, 321)
-            target_goal_b = Vec3(800, -5213, 321)
+        target_goal_a, target_goal_b = get_target_goal(self.team)
 
         # not_my_car = packet.game_cars[packet.num_cars]
         self.need_boost = my_car.boost < 12
@@ -114,14 +109,12 @@ class MyBot(BaseAgent):
                 target_location = closest_boost
 
         # Need more boost
-        if my_car.boost < 20 or self.need_boost:
-            my_goal: GoalInfo = self.goal_info[self.team]
-            goal_location = Vec3(my_goal.location)
-            closest_boost = find_boost_in_path(car_location, goal_location, self.boost_pad_tracker)
-            if closest_boost is not None:
-                target_location = closest_boost
-
-        ball_time = 1
+        # if my_car.boost < 20 or self.need_boost:
+        #     my_goal: GoalInfo = self.goal_info[self.team]
+        #     goal_location = Vec3(my_goal.location)
+        #     closest_boost = find_boost_in_path(car_location, goal_location, self.boost_pad_tracker)
+        #     if closest_boost is not None:
+        #         target_location = closest_boost
 
         if ball_location.z > 200:
             # When the ball is in the air wait for it to come down.
@@ -158,7 +151,7 @@ class MyBot(BaseAgent):
         controls.yaw = controls.steer
 
         target_distance = target_location.length()
-        needed_car_speed = target_distance / ball_time
+        needed_car_speed = target_distance / ball_approach_time
         if needed_car_speed > 2200:
             needed_car_speed = 2200
         elif needed_car_speed < 100:
@@ -262,7 +255,7 @@ class MyBot(BaseAgent):
 
     def car_steer_control(self, controls, target_angle):
         controls.steer = self.pid_steer.get_output(target_angle, 0)
-        if -1.2 > controls.steer > 1.2:
+        if -1.0 > controls.steer > 1.0 or -30 > target_angle > 30:
             controls.handbrake = True
         controls.steer = limit_to_safe_range(controls.steer)
 
