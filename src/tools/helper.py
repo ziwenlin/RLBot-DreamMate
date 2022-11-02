@@ -76,8 +76,8 @@ class PIDController:
 
 def clip_to_field(location: Vec3):
     # Check field
-    mid_p = Vec3(5120, 4096, 2044)
-    mid_n = Vec3(-5120, -4096, 0)
+    mid_p = Vec3(4000, 5100, 2000)
+    mid_n = Vec3(-4000, -5100, 0)
     # mid = check_valid_location(location, mid_p, mid_n)
 
     # Check goals
@@ -153,3 +153,49 @@ def get_required_speed(time_remaining, distance_remaining):
     if target_approach_speed > 2200:
         target_approach_speed = 2200
     return target_approach_speed
+
+
+def find_boost_in_path(car, target, boost_map):
+    """
+
+    :type boost_map: BoostPadTracker
+    :type target: Vec3
+    :type car: Vec3
+    """
+
+    distance_car_to_target = car.dist(target)
+    closest_boost = None
+    for pad in boost_map.boost_pads:
+        distance_to_target = pad.location.dist(target)
+        distance_to_car = pad.location.dist(car)
+        if not pad.is_active:
+            # Skip non active boost pads
+            continue
+        if pad.is_full_boost:
+            # Give a bit more priority to full boost
+            distance_to_target -= 300
+        if distance_to_target + distance_to_car > distance_car_to_target * 1.2:
+            # Skip if the boost is not on track of the path
+            continue
+        if closest_boost is None:
+            # If no boost has been selected, so temporarily select it
+            closest_boost = (pad, distance_to_car, distance_to_target)
+            continue
+        is_closer_to_car = distance_to_car < closest_boost[1]
+        is_closer_to_target = distance_to_target < closest_boost[2]
+        if (is_closer_to_target or is_closer_to_car) is False:
+            # This boost is not closer to the target nor the car, so pass
+            continue
+        elif (is_closer_to_target and is_closer_to_car) is False:
+            # This boost is closer to something, so we need to calculate
+            # Give more priority to boost closer to the car
+            sum_current = distance_to_car + distance_to_target * 1.5
+            sum_previous = closest_boost[1] + closest_boost[2] * 1.5
+            if sum_previous < sum_current:
+                # Boost is not closer to the car
+                continue
+        closest_boost = (pad, distance_to_car, distance_to_target)
+
+    if closest_boost is None:
+        return None
+    return closest_boost[0].location
