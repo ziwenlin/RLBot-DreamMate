@@ -56,3 +56,19 @@ def sign(value):
     return 1
 
 
+class PIDController:
+    def __init__(self, kp, ki, kd):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.i_value = 0
+        self.d_value = 0
+
+    def get_output(self, target, value):
+        error = target - value
+        p = self.kp * error
+        i = self.ki * (error + self.i_value)
+        d = self.kd * (error - self.d_value)
+        self.d_value = error
+        self.i_value += error
+        return p + i + d
