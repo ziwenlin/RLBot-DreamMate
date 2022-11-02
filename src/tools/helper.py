@@ -134,3 +134,14 @@ def check_valid_location(location, box_p, box_n):
     y = check_within_box(location.y, box_p.y, box_n.y)
     z = check_within_box(location.z, box_p.z, box_n.z)
     return x, y, z
+
+
+def get_target_goal(team):
+    if team == 0:
+        target_goal_a = Vec3(800, 5213, 321)
+        target_goal_b = Vec3(-800, 5213, 321)
+    else:
+        target_goal_a = Vec3(-800, -5213, 321)
+        target_goal_b = Vec3(800, -5213, 321)
+    return target_goal_a, target_goal_b
+
