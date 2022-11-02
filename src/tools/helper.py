@@ -81,8 +81,8 @@ def clip_to_field(location: Vec3):
     # mid = check_valid_location(location, mid_p, mid_n)
 
     # Check goals
-    # goal_p = Vec3(893, 6000, 642)
-    # goal_n = Vec3(-893, -6000, 0)
+    # goal_p = Vec3(800, 6000, 642)
+    # goal_n = Vec3(-800, -6000, 0)
     # goal = check_valid_location(location, goal_p, goal_n)
 
     # if sum(mid) > sum(goal):
@@ -145,3 +145,11 @@ def get_target_goal(team):
         target_goal_b = Vec3(800, -5213, 321)
     return target_goal_a, target_goal_b
 
+
+def get_required_speed(time_remaining, distance_remaining):
+    target_approach_speed = distance_remaining / time_remaining
+    if 400 < target_approach_speed < 800:
+        target_approach_speed = 200
+    if target_approach_speed > 2200:
+        target_approach_speed = 2200
+    return target_approach_speed
