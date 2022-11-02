@@ -54,7 +54,7 @@ class MyBot(BaseAgent):
         ball_location = Vec3(packet.game_ball.physics.location)
         ball_relative = relative_location(car_location, car_orientation, ball_location)
         ball_angle = math.atan2(ball_relative.y, ball_relative.x)
-        ball_angle *= 360 / math.pi
+        ball_angle *= 180 / math.pi
 
         # Gather some information about the goals
         target_goal_a, target_goal_b = get_target_goal(self.team)
@@ -80,7 +80,7 @@ class MyBot(BaseAgent):
         target_location = clip_to_field(target_location)
         target_relative = relative_location(car_location, car_orientation, target_location)
         target_angle = math.atan2(target_relative.y, target_relative.x)
-        target_angle *= 360 / math.pi
+        target_angle *= 180 / math.pi
 
         target_distance = target_location.length()
         target_approach_distance = target_distance + 0.2 * abs(target_relative.x) - 0.8 * abs(target_relative.y)

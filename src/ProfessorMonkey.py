@@ -72,7 +72,7 @@ class MyBot(BaseAgent):
         ball_location = Vec3(packet.game_ball.physics.location)
         ball_relative = relative_location(car_location, car_orientation, ball_location)
         ball_angle = math.atan2(ball_relative.y, ball_relative.x)
-        ball_angle *= 360 / math.pi
+        ball_angle *= 180 / math.pi
         ball_distance = car_location.dist(ball_location)
 
         # Prediction of the ball according to how quickly the car moves
@@ -171,7 +171,7 @@ class MyBot(BaseAgent):
         # Calculations after the target is determined
         target_relative = relative_location(car_location, car_orientation, target_location)
         target_angle = math.atan2(target_relative.y, target_relative.x)
-        target_angle *= 360 / math.pi
+        target_angle *= 180 / math.pi
 
         if my_car.has_wheel_contact is False:
             controls.pitch = -1 * math.tanh(car_orientation.pitch * 1.2)
@@ -203,7 +203,7 @@ class MyBot(BaseAgent):
         if car_speed > 2200:
             controls.boost = False
 
-        if -30 > target_angle > 30 and target_relative.x < 0 and my_car.has_wheel_contact:
+        if -120 > target_angle > 120 and target_relative.x < 0 and my_car.has_wheel_contact:
             return self.do_half_flip(packet)
 
         if controls.steer == self.last_steering:
