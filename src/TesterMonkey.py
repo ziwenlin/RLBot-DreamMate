@@ -88,9 +88,12 @@ class MyBot(BaseAgent):
 
         # Draw some things to help understand what the bot is thinking
         self.renderer.draw_line_3d(car_location, target_location, self.renderer.gray())
-        self.renderer.draw_string_3d(car_location, 1, 1, f'Speed: {car_velocity.length():.1f}', self.renderer.white())
         self.renderer.draw_rect_3d(target_location, 8, 8, True, self.renderer.orange(), centered=True)
         self.renderer.draw_rect_3d(ball_prediction, 8, 8, True, self.renderer.pink(), centered=True)
+        self.renderer.draw_string_2d(10, 10, 2, 2, f'Target: {target_approach_speed:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 30, 2, 2, f'Ball: {target_approach_distance:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 50, 2, 2, f'Speed: {car_speed:3.1f}', self.renderer.white())
+
 
         controls = SimpleControllerState()
         self.car_air_control(car_orientation, controls, my_car)
