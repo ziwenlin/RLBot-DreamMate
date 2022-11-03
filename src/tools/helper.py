@@ -1,5 +1,8 @@
+from rlbot.agents.base_agent import SimpleControllerState
+
 from util.ball_prediction_analysis import find_slice_at_time
 from util.boost_pad_tracker import BoostPadTracker
+from util.drive import limit_to_safe_range
 from util.vec import Vec3
 
 
@@ -226,3 +229,12 @@ def predict_ball_fall(ball_prediction, ball_prediction_struct, packet):
             ball_prediction = new_ball_prediction
             break
     return ball_approach_time, ball_prediction
+
+
+def limit_controls(controls: SimpleControllerState):
+    controls.pitch = limit_to_safe_range(controls.pitch)
+    controls.yaw = limit_to_safe_range(controls.yaw)
+    controls.roll = limit_to_safe_range(controls.roll)
+    controls.steer = limit_to_safe_range(controls.steer)
+    controls.throttle = limit_to_safe_range(controls.throttle)
+    return controls
