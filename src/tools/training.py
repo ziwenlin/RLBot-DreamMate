@@ -1,12 +1,14 @@
 import math
+import random
 
-from rlbot.utils.game_state_util import CarState, Physics, Vector3, Rotator, BallState, GameState
+from rlbot.utils.game_state_util import CarState, Physics, Vector3, Rotator, BallState, GameState, GameInfoState
 
 
 def aerial_mid_field(index):
+    y = random.randint(1, 5) * 1000
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(0, -2000, 20),
+            location=Vector3(0, -y, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)
@@ -19,5 +21,11 @@ def aerial_mid_field(index):
             angular_velocity=Vector3(0, 0, 0)
         )
     )
-    game_state = GameState(ball=ball_state, cars={index: car_state})
-    return game_state
+    game_info = GameInfoState(
+        game_speed=0.8
+    )
+    return GameState(
+        ball=ball_state,
+        cars={index: car_state},
+        game_info=game_info
+    )
