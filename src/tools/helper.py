@@ -1,3 +1,5 @@
+import math
+
 from rlbot.agents.base_agent import SimpleControllerState
 
 from util.ball_prediction_analysis import find_slice_at_time
@@ -270,3 +272,62 @@ class SmoothTargetController:
         self.target.y += self.pid_y.get_output(target.y, self.target.y)
         self.target.z += self.pid_z.get_output(target.z, self.target.z)
         return self.target
+
+
+def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
+    gravity = Vec3(0, 0, -650)
+    relative_target = target - car_location
+    boost_direction = relative_target.normalized()
+
+    trajectory_speed = car_velocity.length() + 1
+    target_distance = relative_target.length()
+    target_time = target_distance / trajectory_speed
+
+    increment_z_angle = 10
+    increment_xy_angle = 10
+    for i in range(20):
+        acceleration_vector: Vec3 = boost_direction * 991.666
+        acceleration_vector += gravity
+
+        velocity_vector = car_velocity + acceleration_vector * target_time * 0.5
+        velocity_z_angle = math.asin(velocity_vector.z / velocity_vector.length()) * 180 / math.pi
+        velocity_xy_angle = math.atan2(velocity_vector.y, velocity_vector.x) * 180 / math.pi
+
+        target_vector = relative_target + velocity_vector * target_time * 2
+        target__distance = target_vector.length()
+        target_z_angle = math.asin(target_vector.z / target__distance) * 180 / math.pi
+        target_xy_angle = math.atan2(target_vector.y, target_vector.x) * 180 / math.pi
+
+        velocity_z_angle_error = calculate_angle_error(target_z_angle, velocity_z_angle)
+        if velocity_z_angle_error > 0:
+            acceleration_vector -= gravity + gravity * increment_z_angle
+        else:
+            increment_z_angle *= 0.5
+            acceleration_vector -= gravity - gravity * increment_z_angle
+
+        velocity_xy_angle_error = calculate_angle_error(target_xy_angle, velocity_xy_angle)
+        if velocity_xy_angle_error > 0:
+            acceleration_vector = rotate_xy_vector(acceleration_vector, increment_xy_angle)
+        else:
+            increment_xy_angle *= 0.5
+            acceleration_vector = rotate_xy_vector(acceleration_vector, -increment_xy_angle)
+
+        boost_direction = acceleration_vector.normalized()
+    return boost_direction * (target_distance / 2)
+
+
+def calculate_angle_error(target: float, current: float):
+    angle_error = target - current
+    if angle_error < -180:
+        angle_error += 360
+    elif angle_error > 180:
+        angle_error -= 360
+    return angle_error
+
+
+def rotate_xy_vector(vector: Vec3, degrees):
+    xy_length = vector.flat().length()
+    angle = math.atan2(vector.y, vector.x) + degrees * math.pi / 180
+    vector.x = math.cos(angle) * xy_length
+    vector.y = math.sin(angle) * xy_length
+    return vector
