@@ -238,3 +238,35 @@ def limit_controls(controls: SimpleControllerState):
     controls.steer = limit_to_safe_range(controls.steer)
     controls.throttle = limit_to_safe_range(controls.throttle)
     return controls
+
+
+class JumpController:
+    def __init__(self):
+        self.state = False
+        self.timer = 0
+
+    def toggle(self):
+        self.state = not self.state
+        return self.state
+
+    def toggle_hold(self, delay=1):
+        if self.timer < delay:
+            self.timer += 1
+        else:
+            self.timer = 0
+            self.state = not self.state
+        return self.state
+
+
+class SmoothTargetController:
+    def __init__(self, kp, ki, kd):
+        self.pid_x = PIDController(kp, ki, kd)
+        self.pid_y = PIDController(kp, ki, kd)
+        self.pid_z = PIDController(kp, ki, kd)
+        self.target = Vec3()
+
+    def step(self, target: Vec3):
+        self.target.x += self.pid_x.get_output(target.x, self.target.x)
+        self.target.y += self.pid_y.get_output(target.y, self.target.y)
+        self.target.z += self.pid_z.get_output(target.z, self.target.z)
+        return self.target
