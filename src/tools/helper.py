@@ -280,40 +280,42 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     boost_direction = relative_target.normalized()
 
     trajectory_speed = car_velocity.length() + 1
-    target_distance = relative_target.length()
-    target_time = target_distance / trajectory_speed
+    relative_distance = relative_target.length() + 1
+    relative_time = relative_distance / trajectory_speed
+    relative_z_angle = math.asin(relative_target.z / relative_distance) * 180 / math.pi
+    relative_xy_angle = math.atan2(relative_target.y, relative_target.x) * 180 / math.pi
 
     increment_z_angle = 10
     increment_xy_angle = 10
-    for i in range(20):
-        acceleration_vector: Vec3 = boost_direction * 991.666
+    last_z_angle_error = 1000
+    last_xy_angle_error = 1000
+    for i in range(30):
+        acceleration_vector: Vec3 = boost_direction.normalized() * 991.666
         acceleration_vector += gravity
 
-        velocity_vector = car_velocity + acceleration_vector * target_time * 0.5
-        velocity_z_angle = math.asin(velocity_vector.z / velocity_vector.length()) * 180 / math.pi
+        velocity_vector = car_velocity + acceleration_vector * relative_time * 0.5
+        velocity_speed = velocity_vector.length()
+        velocity_z_angle = math.asin(velocity_vector.z / velocity_speed) * 180 / math.pi
         velocity_xy_angle = math.atan2(velocity_vector.y, velocity_vector.x) * 180 / math.pi
 
-        target_vector = relative_target + velocity_vector * target_time * 2
-        target__distance = target_vector.length()
-        target_z_angle = math.asin(target_vector.z / target__distance) * 180 / math.pi
-        target_xy_angle = math.atan2(target_vector.y, target_vector.x) * 180 / math.pi
+        # position_vector = relative_target - velocity_vector * relative_time * 2
+        # position_distance = position_vector.length()
+        # position_z_angle = math.asin(position_vector.z / position_distance) * 180 / math.pi
+        # position_xy_angle = math.atan2(position_vector.y, position_vector.x) * 180 / math.pi
 
-        velocity_z_angle_error = calculate_angle_error(target_z_angle, velocity_z_angle)
-        if velocity_z_angle_error > 0:
-            acceleration_vector -= gravity + gravity * increment_z_angle
-        else:
-            increment_z_angle *= 0.5
-            acceleration_vector -= gravity - gravity * increment_z_angle
+        velocity_z_angle_error = calculate_angle_error(relative_z_angle, velocity_z_angle)
+        if abs(velocity_z_angle_error) > abs(last_z_angle_error):
+            increment_z_angle *= -0.33
+        boost_direction = rotate_z_vector(boost_direction, increment_z_angle)
+        last_z_angle_error = velocity_z_angle_error
 
-        velocity_xy_angle_error = calculate_angle_error(target_xy_angle, velocity_xy_angle)
-        if velocity_xy_angle_error > 0:
-            acceleration_vector = rotate_xy_vector(acceleration_vector, increment_xy_angle)
-        else:
-            increment_xy_angle *= 0.5
-            acceleration_vector = rotate_xy_vector(acceleration_vector, -increment_xy_angle)
+        velocity_xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
+        if abs(velocity_xy_angle_error) > abs(last_xy_angle_error):
+            increment_xy_angle *= -0.33
+        boost_direction = rotate_xy_vector(boost_direction, increment_xy_angle)
+        last_xy_angle_error = velocity_xy_angle_error
 
-        boost_direction = acceleration_vector.normalized()
-    return boost_direction * (target_distance / 2)
+    return boost_direction * (relative_distance * 0.2)
 
 
 def calculate_angle_error(target: float, current: float):
@@ -325,9 +327,20 @@ def calculate_angle_error(target: float, current: float):
     return angle_error
 
 
+def rotate_z_vector(vector: Vec3, degrees: float):
+    vector_length = vector.length()
+    z_angle = math.asin(vector.z / vector_length) + degrees * math.pi / 180
+    xy_angle = math.atan2(vector.y, vector.x)
+    xy_length = math.cos(z_angle) * vector_length
+    z = math.sin(z_angle) * vector_length
+    x = math.cos(xy_angle) * xy_length
+    y = math.sin(xy_angle) * xy_length
+    return Vec3(x, y, z)
+
+
 def rotate_xy_vector(vector: Vec3, degrees):
     xy_length = vector.flat().length()
     angle = math.atan2(vector.y, vector.x) + degrees * math.pi / 180
-    vector.x = math.cos(angle) * xy_length
-    vector.y = math.sin(angle) * xy_length
-    return vector
+    x = math.cos(angle) * xy_length
+    y = math.sin(angle) * xy_length
+    return Vec3(x, y, vector.z)
