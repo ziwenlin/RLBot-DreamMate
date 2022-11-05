@@ -55,11 +55,17 @@ class TestMonkey(BaseAgent):
         car_yaw = car_orientation.yaw * 180 / math.pi
 
         # Draw some things to help understand what the bot is thinking
-        # self.renderer.draw_line_3d(car_location, target_location, self.renderer.gray())
-        # self.renderer.draw_rect_3d(target_location, 8, 8, True, self.renderer.orange(), centered=True)
-        # self.renderer.draw_string_2d(10, 10, 2, 2, f'Target: {target_approach_speed:3.1f}', self.renderer.white())
-        # self.renderer.draw_string_2d(10, 30, 2, 2, f'Ball: {target_approach_distance:3.1f}', self.renderer.white())
-        # self.renderer.draw_string_2d(10, 50, 2, 2, f'Speed: {car_speed:3.1f}', self.renderer.white())
+        self.renderer.draw_line_3d(car_location, car_location + target_direction, self.renderer.orange())
+        self.renderer.draw_line_3d(car_location, car_location + car_velocity, self.renderer.cyan())
+        self.renderer.draw_line_3d(ball_location, ball_location + ball_velocity, self.renderer.red())
+        self.renderer.draw_rect_3d(car_location + target_direction, 8, 8, True, self.renderer.orange(), centered=True)
+        self.renderer.draw_rect_3d(car_location + car_velocity, 8, 8, True, self.renderer.cyan(), centered=True)
+        self.renderer.draw_rect_3d(ball_location + ball_velocity, 8, 8, True, self.renderer.red(), centered=True)
+
+        self.renderer.draw_string_2d(10, 00, 3, 5, f'1: {target_xy_angle:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 30, 3, 5, f'2: {target_z_angle:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 60, 3, 5, f'3: {car_yaw:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 90, 3, 5, f'3: {car_roll:3.1f}', self.renderer.white())
 
         # Controlling the car
         controls = SimpleControllerState()
