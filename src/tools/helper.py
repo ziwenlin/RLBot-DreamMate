@@ -276,12 +276,15 @@ class SmoothTargetController:
 
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = target - car_location
-    relative_distance = relative_target.length() + 1
-    relative_z_angle = math.asin(relative_target.z / relative_distance) * 180 / math.pi
-    relative_xy_angle = math.atan2(relative_target.y, relative_target.x) * 180 / math.pi
+    relative_xy_angle = math.atan2(relative_target.y, relative_target.x)
+    relative_xy_distance = relative_target.y / math.sin(relative_xy_angle)
+    relative_z_angle = math.atan2(relative_target.z, relative_xy_distance)
+    relative_distance = relative_target.z / math.sin(relative_z_angle)
+    relative_xy_angle *= 180 / math.pi
+    relative_z_angle *= 180 / math.pi
 
     trajectory_speed = car_velocity.length() + 1
-    trajectory_time = relative_distance / trajectory_speed
+    trajectory_time = abs(relative_distance / trajectory_speed) * 0.5
 
     increment_z_angle = 10
     increment_xy_angle = 10
@@ -291,33 +294,43 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     gravity = Vec3(0, 0, -650)
     boost_direction = relative_target.normalized()
 
-    for i in range(30):
+    for i in range(12):
         acceleration_vector: Vec3 = boost_direction.normalized() * 991.666
         acceleration_vector += gravity
 
-        velocity_vector = car_velocity + acceleration_vector * trajectory_time * 0.5
-        velocity_speed = velocity_vector.length()
-        velocity_z_angle = math.asin(velocity_vector.z / velocity_speed) * 180 / math.pi
-        velocity_xy_angle = math.atan2(velocity_vector.y, velocity_vector.x) * 180 / math.pi
+        velocity_vector = car_velocity + acceleration_vector * trajectory_time
+        velocity_xy_angle = math.atan2(velocity_vector.y, velocity_vector.x)
+        velocity_xy_distance = velocity_vector.y / math.sin(velocity_xy_angle)
+        velocity_z_angle = math.atan2(velocity_vector.z, velocity_xy_distance)
+        velocity_speed = velocity_vector.z / math.sin(velocity_z_angle)
+        velocity_xy_angle *= 180 / math.pi
+        velocity_z_angle *= 180 / math.pi
 
-        # position_vector = relative_target - velocity_vector * relative_time * 2
-        # position_distance = position_vector.length()
-        # position_z_angle = math.asin(position_vector.z / position_distance) * 180 / math.pi
-        # position_xy_angle = math.atan2(position_vector.y, position_vector.x) * 180 / math.pi
+        # position_vector = relative_target - car_velocity * trajectory_time \
+        #                   - 0.5 * acceleration_vector * trajectory_time ** 2
+        position_vector = relative_target - velocity_vector * trajectory_time
+        position_xy_angle = math.atan2(position_vector.y, position_vector.x)
+        position_xy_distance = position_vector.y / math.sin(position_xy_angle)
+        position_z_angle = math.atan2(position_vector.z, position_xy_distance)
+        position_distance = position_vector.z / math.sin(position_z_angle)
+        position_xy_angle *= 180 / math.pi
+        position_z_angle *= 180 / math.pi
 
-        velocity_z_angle_error = calculate_angle_error(relative_z_angle, velocity_z_angle)
-        if abs(velocity_z_angle_error) > abs(last_z_angle_error):
-            increment_z_angle *= -0.33
+        trajectory_time = abs(relative_distance / velocity_speed) * 0.5
+
+        z_angle_error = calculate_angle_error(relative_z_angle, velocity_z_angle)
+        if abs(z_angle_error) > abs(last_z_angle_error):
+            increment_z_angle *= -0.5
         boost_direction = rotate_z_vector(boost_direction, increment_z_angle)
-        last_z_angle_error = velocity_z_angle_error
+        last_z_angle_error = z_angle_error
 
-        velocity_xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
-        if abs(velocity_xy_angle_error) > abs(last_xy_angle_error):
+        xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
+        if abs(xy_angle_error) > abs(last_xy_angle_error):
             increment_xy_angle *= -0.33
         boost_direction = rotate_xy_vector(boost_direction, increment_xy_angle)
-        last_xy_angle_error = velocity_xy_angle_error
+        last_xy_angle_error = xy_angle_error
 
-    return boost_direction * (relative_distance * 0.2)
+    return boost_direction * (relative_distance * 0.1)
 
 
 def calculate_angle_error(target: float, current: float):
