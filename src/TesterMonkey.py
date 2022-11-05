@@ -15,6 +15,8 @@ class TestMonkey(BaseAgent):
         super().__init__(name, team, index)
         self.jump = JumpController()
 
+        self.training = True
+
         self.pid_steer = PIDController(0.1, 0.0, 0.2)
         self.pid_pitch = PIDController(0.05, 0.000001, 1.2)
         self.pid_roll = PIDController(0.005, 0.000001, 1.2)
@@ -36,12 +38,15 @@ class TestMonkey(BaseAgent):
         ball_angle = math.atan2(ball_relative.y, ball_relative.x)
         ball_angle *= 180 / math.pi
 
-        if ball_location.z < 100:
+        if (ball_location.z < 100 or my_car.boost < 5) and self.training is True:
+            self.training = False
+            # game_state = aerial_mid_field(self.index)
             game_state = aerial_mid_field_frozen_ball(self.index)
             self.set_game_state(game_state)
             return SimpleControllerState()
         elif my_car.boost < 5:
-            game_state = need_boost(self.index)
+            self.training = True
+            game_state = need_boost(self.index, 50)
             self.set_game_state(game_state)
 
         target_direction = find_aerial_direction(ball_location, car_location, car_velocity)
