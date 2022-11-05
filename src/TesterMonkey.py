@@ -32,14 +32,17 @@ class TestMonkey(BaseAgent):
         car_location = Vec3(my_car.physics.location)
         car_orientation = Orientation(my_car.physics.rotation)
         car_velocity = Vec3(my_car.physics.velocity)
+        car_velocity_xy_angle = math.atan2(car_velocity.y, car_velocity.x) * 180 / math.pi
+        car_relative_velocity = relative_location(Vec3(), car_orientation, car_velocity)
         car_ground_speed = car_velocity.flat().length()
 
         # Gather some information about the ball
         ball_location = Vec3(packet.game_ball.physics.location)
         ball_velocity = Vec3(packet.game_ball.physics.velocity)
-        ball_relative = relative_location(car_location, car_orientation, ball_location)
-        ball_angle = math.atan2(ball_relative.y, ball_relative.x)
-        ball_angle *= 180 / math.pi
+        ball_relative = ball_location - car_location
+        ball_xy_angle = math.atan2(ball_relative.y, ball_relative.x) * 180 / math.pi
+        ball_direction = relative_location(car_location, car_orientation, ball_location)
+        ball_direction_xy_angle = math.atan2(ball_direction.y, ball_direction.x) * 180 / math.pi
 
         if (ball_location.z < 100 or my_car.boost < 5) and self.training is True:
             self.training = False
@@ -59,6 +62,10 @@ class TestMonkey(BaseAgent):
         target_z_angle = math.asin(target_direction.z / target_direction.length()) * 180 / math.pi
         target_xy_angle = math.atan2(target_direction.y, target_direction.x) * 180 / math.pi
         target_zy_angle = math.atan2(target_direction.y, target_direction.z) * 180 / math.pi
+
+        target_relative_xy_angle = math.atan2(target_relative_direction.y, target_relative_direction.x) * 180 / math.pi
+        target_relative_zy_angle = math.atan2(target_relative_direction.y, target_relative_direction.z) * 180 / math.pi
+        target_relative_z_angle = math.asin(target_relative_direction.z / target_relative_direction.length()) * 180 / math.pi
 
         car_pitch = car_orientation.pitch * 180 / math.pi
         car_roll = car_orientation.roll * 180 / math.pi
@@ -84,11 +91,19 @@ class TestMonkey(BaseAgent):
             self.car_single_jump(controls, my_car)
         controls.jump = self.jump.state
 
-        if not my_car.has_wheel_contact:
-            controls.pitch = self.pid_pitch.get_output(calculate_angle_error(target_z_angle, car_pitch), 0)
-            controls.roll = self.pid_roll.get_output(calculate_angle_error(target_zy_angle, car_roll), 0)
-            controls.yaw = self.pid_yaw.get_output(calculate_angle_error(target_xy_angle, car_yaw), 0)
+
+        if my_car.has_wheel_contact is False:
+            # controls.pitch = self.pid_pitch.get_output(calculate_angle_error(target_z_angle, car_pitch), 0)
+            # controls.roll = self.pid_roll.get_output(calculate_angle_error(target_zy_angle, car_roll), 0)
+            # controls.yaw = self.pid_yaw.get_output(calculate_angle_error(target_xy_angle, car_yaw), 0)
+            controls.pitch = self.pid_pitch.get_output(target_relative_z_angle, 0)
+            controls.roll = self.pid_roll.get_output(target_relative_zy_angle, 0)
+            controls.yaw = self.pid_yaw.get_output(target_relative_xy_angle, 0)
             controls.boost = True
+
+        if car_location.z < 50 and abs(car_roll) > 170:
+            controls.throttle = -1
+            controls.roll = 1
 
         return limit_controls(controls)
 
