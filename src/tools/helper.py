@@ -275,25 +275,27 @@ class SmoothTargetController:
 
 
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
-    gravity = Vec3(0, 0, -650)
     relative_target = target - car_location
-    boost_direction = relative_target.normalized()
-
-    trajectory_speed = car_velocity.length() + 1
     relative_distance = relative_target.length() + 1
-    relative_time = relative_distance / trajectory_speed
     relative_z_angle = math.asin(relative_target.z / relative_distance) * 180 / math.pi
     relative_xy_angle = math.atan2(relative_target.y, relative_target.x) * 180 / math.pi
+
+    trajectory_speed = car_velocity.length() + 1
+    trajectory_time = relative_distance / trajectory_speed
 
     increment_z_angle = 10
     increment_xy_angle = 10
     last_z_angle_error = 1000
     last_xy_angle_error = 1000
+
+    gravity = Vec3(0, 0, -650)
+    boost_direction = relative_target.normalized()
+
     for i in range(30):
         acceleration_vector: Vec3 = boost_direction.normalized() * 991.666
         acceleration_vector += gravity
 
-        velocity_vector = car_velocity + acceleration_vector * relative_time * 0.5
+        velocity_vector = car_velocity + acceleration_vector * trajectory_time * 0.5
         velocity_speed = velocity_vector.length()
         velocity_z_angle = math.asin(velocity_vector.z / velocity_speed) * 180 / math.pi
         velocity_xy_angle = math.atan2(velocity_vector.y, velocity_vector.x) * 180 / math.pi
