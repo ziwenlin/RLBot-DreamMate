@@ -22,7 +22,7 @@ def aerial_mid_field(index):
         )
     )
     game_info = GameInfoState(
-        game_speed=0.8
+        # game_speed=0.8
     )
     return GameState(
         ball=ball_state,
@@ -49,7 +49,7 @@ def aerial_mid_field_frozen_ball(index):
         )
     )
     game_info = GameInfoState(
-        game_speed=0.8
+        # game_speed=0.8
     )
     return GameState(
         ball=ball_state,
@@ -58,9 +58,9 @@ def aerial_mid_field_frozen_ball(index):
     )
 
 
-def need_boost(index):
+def need_boost(index, amount=100):
     return GameState(
         cars={index: CarState(
-            boost_amount=100
+            boost_amount=amount
         )}
     )
