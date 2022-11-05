@@ -3,7 +3,8 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error
+from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error, \
+    SmoothTargetController
 from tools.training import need_boost, aerial_mid_field_frozen_ball
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
@@ -21,6 +22,8 @@ class TestMonkey(BaseAgent):
         self.pid_pitch = PIDController(0.05, 0.000001, 1.2)
         self.pid_roll = PIDController(0.005, 0.000001, 1.2)
         self.pid_yaw = PIDController(0.02, 0.000001, 1.2)
+
+        self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
 
@@ -50,6 +53,8 @@ class TestMonkey(BaseAgent):
             self.set_game_state(game_state)
 
         target_direction = find_aerial_direction(ball_location, car_location, car_velocity)
+        target_direction = self.smooth_target.step(target_direction)
+
         target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
         target_z_angle = math.asin(target_direction.z / target_direction.length()) * 180 / math.pi
         target_xy_angle = math.atan2(target_direction.y, target_direction.x) * 180 / math.pi
