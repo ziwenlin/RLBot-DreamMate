@@ -14,6 +14,7 @@ class TickMonitor:
         else:
             self.tps = 1
         self.last_time = time_now
+        return self.tps
 
 
 def main():

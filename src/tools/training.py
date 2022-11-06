@@ -4,6 +4,8 @@ import random
 from rlbot.utils.game_state_util import CarState, Physics, Vector3, Rotator, BallState, GameState, GameInfoState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
+from tools.performance import TickMonitor
+
 
 class TrainingController:
     def __init__(self, car_index):
@@ -12,16 +14,24 @@ class TrainingController:
         self.running = True
         self.boost_amount = 50
         self.packet = GameTickPacket()
+        self.last_hit = 0
+        self.tick_speed = TickMonitor()
 
     def step(self, packet: GameTickPacket):
         self.packet = packet
         self.tick_count += 1
-        if self.tick_count > 1000:
+        tps = self.tick_speed.step()
+        game_speed =packet.game_info.game_speed
+        if self.tick_count > 10 * tps / game_speed:
             self.running = False
         if packet.game_ball.physics.location.z < 100:
             self.running = False
         my_car = packet.game_cars[self.car_index]
         if my_car.boost == 0 and self.boost_amount == 0:
+            self.running = False
+        last_hit = packet.game_ball.latest_touch.time_seconds
+        if last_hit != self.last_hit:
+            self.last_hit = last_hit
             self.running = False
 
     def need_boost(self):
@@ -76,7 +86,7 @@ def aerial_mid_field(index):
     )
 
 def aerial_straight_up(index):
-    y = random.randint(3, 8) * -100
+    y = random.randint(3, 16) * -100
     x = random.randint(-3, 3) * 50
     car_state = CarState(
         boost_amount=100, physics=Physics(
