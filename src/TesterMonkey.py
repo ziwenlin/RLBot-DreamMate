@@ -86,12 +86,11 @@ class TestMonkey(BaseAgent):
 
         if ball_location.z > 300:
             error_xy_angle = calculate_angle_error(ball_xy_angle, car_velocity_xy_angle)
-            if abs(error_xy_angle) < 5 and my_car.has_wheel_contact:
-                self.car_single_jump(controls, my_car)
+            if abs(error_xy_angle) < 15 and my_car.has_wheel_contact:
+                self.jump.toggle(30)
             controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
             controls.throttle = 0.1
             controls.handbrake = True
-        controls.jump = self.jump.state
 
         if my_car.has_wheel_contact is False:
             # controls.pitch = self.pid_pitch.get_output(calculate_angle_error(target_z_angle, car_pitch), 0)
@@ -106,8 +105,5 @@ class TestMonkey(BaseAgent):
             controls.throttle = -1
             controls.roll = 1
 
+        controls.jump = self.jump.step()
         return limit_controls(controls)
-
-    def car_single_jump(self, controls, my_car):
-        if my_car.has_wheel_contact is True:
-            controls.jump = self.jump.toggle_hold(5)

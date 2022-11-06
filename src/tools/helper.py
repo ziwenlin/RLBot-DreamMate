@@ -244,19 +244,22 @@ def limit_controls(controls: SimpleControllerState):
 
 class JumpController:
     def __init__(self):
+        self.hold_time = 1
         self.state = False
         self.timer = 0
 
-    def toggle(self):
-        self.state = not self.state
-        return self.state
+    def toggle(self, hold_time=1):
+        self.hold_time = hold_time
+        self.state = True
 
-    def toggle_hold(self, delay=1):
-        if self.timer < delay:
+    def step(self):
+        if self.state is False:
+            return False
+        if self.timer < self.hold_time:
             self.timer += 1
         else:
             self.timer = 0
-            self.state = not self.state
+            self.state = False
         return self.state
 
 
