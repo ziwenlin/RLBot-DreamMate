@@ -312,7 +312,7 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
 
         xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
         if abs(xy_angle_error) > abs(last_xy_angle_error):
-            increment_xy_angle *= -0.33
+            increment_xy_angle *= -0.5
         boost_xy_angle += increment_xy_angle
         last_xy_angle_error = xy_angle_error
 
@@ -326,9 +326,15 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
 
 def calculate_vector(vector: Vec3):
     xy_angle = math.atan2(vector.y, vector.x)
-    xy_length = vector.y / math.sin(xy_angle)
+    try:
+        xy_length = vector.y / math.sin(xy_angle)
+    except ZeroDivisionError:
+        xy_length = vector.x / math.cos(xy_angle)
     z_angle = math.atan2(vector.z, xy_length)
-    length = vector.z / math.sin(z_angle)
+    try:
+        length = vector.z / math.sin(z_angle)
+    except ZeroDivisionError:
+        length = xy_length / math.cos(z_angle)
     xy_angle *= 180 / math.pi
     z_angle *= 180 / math.pi
     return xy_angle, z_angle, xy_length, length
