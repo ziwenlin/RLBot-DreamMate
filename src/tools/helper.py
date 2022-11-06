@@ -275,11 +275,10 @@ class SmoothTargetController:
 
 
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
-    relative_target = target - car_location
-    relative_xy_angle, relative_z_angle, relative_xy_distance, relative_distance = calculate_vector(relative_target)
+    relative_target = BetterVec3(target - car_location)
 
     trajectory_speed = car_velocity.length() + 1
-    trajectory_time = abs(relative_distance / trajectory_speed) * 0.5
+    trajectory_time = abs(relative_target.xyz_length / trajectory_speed) * 0.5
 
     increment_z_angle = 10
     increment_xy_angle = 10
@@ -287,41 +286,38 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     last_xy_angle_error = 1000
 
     gravity = Vec3(0, 0, -650)
-    boost_direction = relative_target.normalized()
-    boost_xy_angle, boost_z_angle, boost_xy_length, boost_distance = calculate_vector(boost_direction)
+    boost_direction = BetterVec3(relative_target.normalized())
 
-    for i in range(12):
-        acceleration_vector: Vec3 = boost_direction * 991.666
-        acceleration_vector += gravity
+    for i in range(30):
+        acceleration: Vec3 = boost_direction * 991.666
+        acceleration += gravity
 
-        velocity_vector = car_velocity + acceleration_vector * trajectory_time
-        velocity_xy_angle, velocity_z_angle, velocity_xy_distance, velocity_speed = calculate_vector(velocity_vector)
+        velocity = BetterVec3(car_velocity + acceleration * trajectory_time)
 
         # position_vector = relative_target - car_velocity * trajectory_time \
-        #                   - 0.5 * acceleration_vector * trajectory_time ** 2
-        position_vector = relative_target - velocity_vector * trajectory_time
-        position_xy_angle, position_z_angle, position_xy_distance, position_distance = calculate_vector(position_vector)
+        #                   - 0.5 * acceleration * trajectory_time ** 2
+        position = BetterVec3(relative_target - velocity * trajectory_time)
 
-        trajectory_time = abs(relative_distance / velocity_speed) * 0.5
+        trajectory_time = abs(relative_target.xyz_length / velocity.xyz_length) * 0.5
 
-        z_angle_error = calculate_angle_error(relative_z_angle, velocity_z_angle)
+        z_angle_error = calculate_angle_error(relative_target.z_angle, velocity.z_angle)
         if abs(z_angle_error) > abs(last_z_angle_error):
             increment_z_angle *= -0.5
-        boost_z_angle += increment_z_angle
+        boost_direction.z_angle += increment_z_angle
         last_z_angle_error = z_angle_error
 
-        xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
+        xy_angle_error = calculate_angle_error(relative_target.xy_angle, velocity.xy_angle)
         if abs(xy_angle_error) > abs(last_xy_angle_error):
             increment_xy_angle *= -0.5
-        boost_xy_angle += increment_xy_angle
+        boost_direction.xy_angle += increment_xy_angle
         last_xy_angle_error = xy_angle_error
 
-        boost_direction.z = math.sin(boost_z_angle * math.pi / 180)
-        boost_xy_length = math.cos(boost_z_angle * math.pi / 180)
-        boost_direction.x = math.cos(boost_xy_angle * math.pi / 180) * boost_xy_length
-        boost_direction.y = math.sin(boost_xy_angle * math.pi / 180) * boost_xy_length
+        boost_direction.z = math.sin(boost_direction.z_angle * math.pi / 180)
+        boost_direction.xy_length = math.cos(boost_direction.z_angle * math.pi / 180)
+        boost_direction.x = math.cos(boost_direction.xy_angle * math.pi / 180) * boost_direction.xy_length
+        boost_direction.y = math.sin(boost_direction.xy_angle * math.pi / 180) * boost_direction.xy_length
 
-    return boost_direction * (relative_distance * 0.1)
+    return boost_direction * (relative_target.xyz_length * 0.1)
 
 
 def calculate_vector(vector: Vec3):
@@ -338,6 +334,13 @@ def calculate_vector(vector: Vec3):
     xy_angle *= 180 / math.pi
     z_angle *= 180 / math.pi
     return xy_angle, z_angle, xy_length, length
+
+
+class BetterVec3(Vec3):
+    def __init__(self, vector):
+        super().__init__(vector)
+        self.xy_angle, self.z_angle, self.xy_length, self.xyz_length \
+            = calculate_vector(vector)
 
 
 def calculate_angle_error(target: float, current: float):
@@ -370,3 +373,22 @@ def rotate_xy_vector(vector: Vec3, degrees):
     x = math.cos(angle) * xy_length
     y = math.sin(angle) * xy_length
     return Vec3(x, y, vector.z)
+
+
+def divide_vector(a: Vec3, b: Vec3):
+    try:
+        x = a.x / (b.x)
+        y = a.y / (b.y)
+        z = a.z / (b.z)
+    except ZeroDivisionError:
+        x = a.x / (b.x + 1)
+        y = a.y / (b.y + 1)
+        z = a.z / (b.z + 1)
+    return Vec3(x, y, z)
+
+
+def multiply_vector(a: Vec3, b: Vec3):
+    x = a.x * (b.x)
+    y = a.y * (b.y)
+    z = a.z * (b.z)
+    return Vec3(x, y, z)
