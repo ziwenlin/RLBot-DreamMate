@@ -293,6 +293,12 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
 
     gravity = Vec3(0, 0, -650)
     boost_direction = relative_target.normalized()
+    boost_xy_angle = math.atan2(relative_target.y, relative_target.x)
+    boost_xy_length = boost_direction.y / math.sin(boost_xy_angle)
+    boost_z_angle = math.atan2(boost_direction.z, boost_xy_length)
+    boost_distance = relative_target.z / math.sin(relative_z_angle)
+    boost_xy_angle *= 180 / math.pi
+    boost_z_angle *= 180 / math.pi
 
     for i in range(12):
         acceleration_vector: Vec3 = boost_direction.normalized() * 991.666
@@ -321,14 +327,19 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
         z_angle_error = calculate_angle_error(relative_z_angle, velocity_z_angle)
         if abs(z_angle_error) > abs(last_z_angle_error):
             increment_z_angle *= -0.5
-        boost_direction = rotate_z_vector(boost_direction, increment_z_angle)
+        boost_z_angle += increment_z_angle
         last_z_angle_error = z_angle_error
 
         xy_angle_error = calculate_angle_error(relative_xy_angle, velocity_xy_angle)
         if abs(xy_angle_error) > abs(last_xy_angle_error):
             increment_xy_angle *= -0.33
-        boost_direction = rotate_xy_vector(boost_direction, increment_xy_angle)
+        boost_xy_angle += increment_xy_angle
         last_xy_angle_error = xy_angle_error
+
+        boost_direction.z = math.sin(boost_z_angle * math.pi / 180)
+        boost_xy_length = math.cos(boost_z_angle * math.pi / 180)
+        boost_direction.x = math.cos(boost_xy_angle * math.pi / 180) * boost_xy_length
+        boost_direction.y = math.sin(boost_xy_angle * math.pi / 180) * boost_xy_length
 
     return boost_direction * (relative_distance * 0.1)
 
@@ -357,8 +368,9 @@ def rotate_z_vector(vector: Vec3, degrees: float):
 
 
 def rotate_xy_vector(vector: Vec3, degrees):
-    xy_length = vector.flat().length()
-    angle = math.atan2(vector.y, vector.x) + degrees * math.pi / 180
+    angle = math.atan2(vector.y, vector.x)
+    xy_length = vector.y / math.sin(angle)
+    angle += degrees * math.pi / 180
     x = math.cos(angle) * xy_length
     y = math.sin(angle) * xy_length
     return Vec3(x, y, vector.z)
