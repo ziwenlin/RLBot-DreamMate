@@ -2,11 +2,55 @@ import math
 import random
 
 from rlbot.utils.game_state_util import CarState, Physics, Vector3, Rotator, BallState, GameState, GameInfoState
+from rlbot.utils.structures.game_data_struct import GameTickPacket
+
+
+class TrainingController:
+    def __init__(self, car_index):
+        self.car_index = car_index
+        self.tick_count = 0
+        self.running = True
+        self.boost_amount = 50
+        self.packet = GameTickPacket()
+
+    def step(self, packet: GameTickPacket):
+        self.packet = packet
+        self.tick_count += 1
+        if self.tick_count > 1000:
+            self.running = False
+        if packet.game_ball.physics.location.z < 100:
+            self.running = False
+        my_car = packet.game_cars[self.car_index]
+        if my_car.boost == 0 and self.boost_amount == 0:
+            self.running = False
+
+    def need_boost(self):
+        my_car = self.packet.game_cars[self.car_index]
+        if my_car.boost < 10 and self.boost_amount > 0:
+            return True
+        return False
+
+    def add_boost(self):
+        my_car = self.packet.game_cars[self.car_index]
+        boost_given = 50 if self.boost_amount > 50 else self.boost_amount
+        self.boost_amount -= boost_given
+        new_boost_amount = boost_given + my_car.boost
+        return need_boost(self.car_index, new_boost_amount)
+
+    def reset(self):
+        self.boost_amount = 50
+        self.tick_count = 0
+        self.running = True
+        return aerial_mid_field_frozen_ball(self.car_index)
+        # return aerial_straight_up(self.car_index)
+
+    def is_finished(self):
+        return self.running is False
 
 
 def aerial_mid_field(index):
     y = random.randint(1, 4) * -1000
-    x = random.randint(-3, 3) * 1000
+    x = random.randint(-3, 3) * 100
     car_state = CarState(
         boost_amount=100, physics=Physics(
             location=Vector3(x, y, 20),
@@ -32,9 +76,11 @@ def aerial_mid_field(index):
     )
 
 def aerial_straight_up(index):
+    y = random.randint(3, 8) * -100
+    x = random.randint(-3, 3) * 50
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(0, -100, 20),
+            location=Vector3(x, y, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)

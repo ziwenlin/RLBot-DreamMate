@@ -5,7 +5,7 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error, \
     SmoothTargetController
-from tools.training import need_boost, aerial_mid_field_frozen_ball
+import tools.training
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
@@ -16,7 +16,7 @@ class TestMonkey(BaseAgent):
         super().__init__(name, team, index)
         self.jump = JumpController()
 
-        self.training = True
+        self.training = tools.training.TrainingController(index)
 
         self.pid_steer = PIDController(0.1, 0.0, 0.2)
         self.pid_pitch = PIDController(0.05, 0.000001, 1.2)
@@ -43,15 +43,11 @@ class TestMonkey(BaseAgent):
         ball_direction = relative_location(car_location, car_orientation, ball_location)
         ball_direction_xy_angle = math.atan2(ball_direction.y, ball_direction.x) * 180 / math.pi
 
-        if (ball_location.z < 100 or my_car.boost < 5) and self.training is True:
-            self.training = False
-            # game_state = aerial_mid_field(self.index)
-            game_state = aerial_mid_field_frozen_ball(self.index)
-            self.set_game_state(game_state)
-        elif my_car.boost < 5:
-            self.training = True
-            game_state = need_boost(self.index, 50)
-            self.set_game_state(game_state)
+        self.training.step(packet)
+        if self.training.need_boost():
+            self.set_game_state(self.training.add_boost())
+        elif self.training.is_finished():
+            self.set_game_state(self.training.reset())
 
         target_direction = find_aerial_direction(ball_location, car_location, car_velocity)
         target_direction = self.smooth_target.step(target_direction)
