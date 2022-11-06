@@ -26,7 +26,6 @@ class TestMonkey(BaseAgent):
         self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-
         # Gather some information about our car
         my_car = packet.game_cars[self.index]
         car_location = Vec3(my_car.physics.location)
@@ -49,7 +48,6 @@ class TestMonkey(BaseAgent):
             # game_state = aerial_mid_field(self.index)
             game_state = aerial_mid_field_frozen_ball(self.index)
             self.set_game_state(game_state)
-            return SimpleControllerState()
         elif my_car.boost < 5:
             self.training = True
             game_state = need_boost(self.index, 50)
@@ -87,10 +85,17 @@ class TestMonkey(BaseAgent):
         # Controlling the car
         controls = SimpleControllerState()
 
-        if ball_location.z > 300:
-            self.car_single_jump(controls, my_car)
-        controls.jump = self.jump.state
+        if abs(target_relative_z_angle) < 15 and abs(target_relative_zy_angle) < 5 and abs(target_relative_xy_angle) < 5:
+            controls.boost = True
 
+        if ball_location.z > 300:
+            error_xy_angle = calculate_angle_error(ball_xy_angle, car_velocity_xy_angle)
+            if abs(error_xy_angle) < 5 and my_car.has_wheel_contact:
+                self.car_single_jump(controls, my_car)
+            controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
+            controls.throttle = 0.1
+            controls.handbrake = True
+        controls.jump = self.jump.state
 
         if my_car.has_wheel_contact is False:
             # controls.pitch = self.pid_pitch.get_output(calculate_angle_error(target_z_angle, car_pitch), 0)
