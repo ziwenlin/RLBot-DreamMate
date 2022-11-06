@@ -297,19 +297,20 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
 
         velocity = BetterVec3(car_velocity + acceleration * trajectory_time)
 
-        # position_vector = relative_target - car_velocity * trajectory_time \
-        #                   - 0.5 * acceleration * trajectory_time ** 2
-        position = BetterVec3(relative_target - velocity * trajectory_time)
+        position = BetterVec3(relative_target - car_velocity * trajectory_time
+                              - 0.5 * acceleration * trajectory_time ** 2)
 
-        trajectory_time = abs(relative_target.xyz_length / velocity.xyz_length) * 0.5
+        trajectory_time = abs(relative_target.xyz_length / velocity.xyz_length) * 0.25
 
-        z_angle_error = calculate_angle_error(relative_target.z_angle, velocity.z_angle)
+        z_angle_error = calculate_angle_error(relative_target.z_angle, position.z_angle)
+        z_angle_error += calculate_angle_error(relative_target.z_angle, velocity.z_angle)
         if abs(z_angle_error) > abs(last_z_angle_error):
             increment_z_angle *= -0.5
         boost_direction.z_angle += increment_z_angle
         last_z_angle_error = z_angle_error
 
-        xy_angle_error = calculate_angle_error(relative_target.xy_angle, velocity.xy_angle)
+        xy_angle_error = calculate_angle_error(relative_target.xy_angle, position.xy_angle)
+        xy_angle_error += calculate_angle_error(relative_target.xy_angle, velocity.xy_angle)
         if abs(xy_angle_error) > abs(last_xy_angle_error):
             increment_xy_angle *= -0.5
         boost_direction.xy_angle += increment_xy_angle
@@ -380,9 +381,9 @@ def rotate_xy_vector(vector: Vec3, degrees):
 
 def divide_vector(a: Vec3, b: Vec3):
     try:
-        x = a.x / (b.x)
-        y = a.y / (b.y)
-        z = a.z / (b.z)
+        x = a.x / b.x
+        y = a.y / b.y
+        z = a.z / b.z
     except ZeroDivisionError:
         x = a.x / (b.x + 1)
         y = a.y / (b.y + 1)
@@ -391,7 +392,7 @@ def divide_vector(a: Vec3, b: Vec3):
 
 
 def multiply_vector(a: Vec3, b: Vec3):
-    x = a.x * (b.x)
-    y = a.y * (b.y)
-    z = a.z * (b.z)
+    x = a.x * b.x
+    y = a.y * b.y
+    z = a.z * b.z
     return Vec3(x, y, z)
