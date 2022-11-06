@@ -343,11 +343,14 @@ def calculate_angle_error(target: float, current: float):
 
 
 def rotate_z_vector(vector: Vec3, degrees: float):
-    vector_length = vector.length()
-    z_angle = math.asin(vector.z / vector_length) + degrees * math.pi / 180
     xy_angle = math.atan2(vector.y, vector.x)
-    xy_length = math.cos(z_angle) * vector_length
-    z = math.sin(z_angle) * vector_length
+    xy_length = vector.y / math.sin(xy_angle)
+    z_angle = math.atan2(vector.z, xy_length)
+    length = vector.z / math.sin(z_angle)
+
+    z_angle += degrees * math.pi / 180
+    xy_length = math.cos(z_angle) * length
+    z = math.sin(z_angle) * length
     x = math.cos(xy_angle) * xy_length
     y = math.sin(xy_angle) * xy_length
     return Vec3(x, y, z)
