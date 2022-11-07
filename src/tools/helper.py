@@ -263,6 +263,36 @@ class JumpController:
         return self.state
 
 
+class BoostController:
+    def __init__(self):
+        self.hold_time = 1
+        self.release_time = 1
+        self.state = False
+        self.timer = 0
+
+    def toggle(self, sureness=1):
+        if sureness > 1:
+            sureness = 1
+        if sureness < 0:
+            return
+        self.hold_time = 5 * sureness
+        self.release_time = 5 * (1-sureness)
+        self.state = True
+
+    def disable(self):
+        self.state = False
+
+    def step(self):
+        if self.state is False:
+            return False
+        self.timer += 1
+        if self.timer > self.hold_time + self.release_time:
+            self.timer = 0
+            self.state = False
+        elif self.timer > self.hold_time:
+            return False
+        return True
+
 class SmoothTargetController:
     def __init__(self, kp, ki, kd):
         self.pid_x = PIDController(kp, ki, kd)

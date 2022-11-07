@@ -3,9 +3,9 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error, \
-    SmoothTargetController
 import tools.training
+from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error, \
+    SmoothTargetController, BoostController
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
@@ -15,13 +15,14 @@ class TestMonkey(BaseAgent):
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
         self.jump = JumpController()
+        self.boost = BoostController()
 
         self.training = tools.training.TrainingController(index)
 
-        self.pid_steer = PIDController(0.1, 0.0, 0.2)
-        self.pid_pitch = PIDController(0.05, 0.000001, 1.2)
-        self.pid_roll = PIDController(0.005, 0.000001, 1.2)
-        self.pid_yaw = PIDController(0.02, 0.000001, 1.2)
+        self.pid_steer = PIDController(0.1, 0.0000001, 0.2)
+        self.pid_pitch = PIDController(0.5, 0.000001, 4.8)
+        self.pid_roll = PIDController(0.05, 0.000001, 1.2)
+        self.pid_yaw = PIDController(0.2, 0.000001, 4.8)
 
         self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
 
@@ -42,6 +43,7 @@ class TestMonkey(BaseAgent):
         ball_xy_angle = math.atan2(ball_relative.y, ball_relative.x) * 180 / math.pi
         ball_direction = relative_location(car_location, car_orientation, ball_location)
         ball_direction_xy_angle = math.atan2(ball_direction.y, ball_direction.x) * 180 / math.pi
+        ball_direction_z_angle = math.asin(ball_direction.z / ball_direction.length()) * 180 / math.pi
 
         self.training.step(packet)
         if self.training.need_boost():
@@ -81,8 +83,10 @@ class TestMonkey(BaseAgent):
         # Controlling the car
         controls = SimpleControllerState()
 
-        if abs(target_relative_z_angle) < 15 and abs(target_relative_zy_angle) < 5 and abs(target_relative_xy_angle) < 5:
-            controls.boost = True
+        if (abs(target_relative_z_angle) < 15 and abs(target_relative_xy_angle) < 15):
+            self.boost.toggle(1)
+        elif (abs(target_relative_z_angle) < 30 and abs(target_relative_xy_angle) < 30):
+            self.boost.toggle(5 / (abs(target_relative_z_angle) + abs(target_relative_xy_angle)))
 
         if ball_location.z > 300:
             error_xy_angle = calculate_angle_error(ball_xy_angle, car_velocity_xy_angle)
@@ -93,17 +97,14 @@ class TestMonkey(BaseAgent):
             controls.handbrake = True
 
         if my_car.has_wheel_contact is False:
-            # controls.pitch = self.pid_pitch.get_output(calculate_angle_error(target_z_angle, car_pitch), 0)
-            # controls.roll = self.pid_roll.get_output(calculate_angle_error(target_zy_angle, car_roll), 0)
-            # controls.yaw = self.pid_yaw.get_output(calculate_angle_error(target_xy_angle, car_yaw), 0)
             controls.pitch = self.pid_pitch.get_output(target_relative_z_angle, 0)
             controls.roll = self.pid_roll.get_output(target_relative_zy_angle, 0)
             controls.yaw = self.pid_yaw.get_output(target_relative_xy_angle, 0)
-            controls.boost = True
 
         if car_location.z < 50 and abs(car_roll) > 170:
             controls.throttle = -1
             controls.roll = 1
 
         controls.jump = self.jump.step()
+        controls.boost = self.boost.step()
         return limit_controls(controls)
