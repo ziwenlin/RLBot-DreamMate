@@ -21,7 +21,9 @@ class TrainingController:
         self.packet = packet
         self.tick_count += 1
         tps = self.tick_speed.step()
-        game_speed =packet.game_info.game_speed
+        game_speed = packet.game_info.game_speed
+        if game_speed == 0:
+            game_speed = 1
         if self.tick_count > 10 * tps / game_speed:
             self.running = False
         if packet.game_ball.physics.location.z < 100:
