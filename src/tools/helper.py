@@ -307,6 +307,56 @@ class SmoothTargetController:
         return self.target
 
 
+def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_location: Vec3, car_velocity: Vec3):
+    relative_target = BetterVec3(target - car_location)
+
+    trajectory_speed = car_velocity.length() + 1
+    trajectory_time = abs(relative_target.xyz_length / trajectory_speed) * 2
+
+    increment_z_angle = 10
+    increment_xy_angle = 10
+    last_z_angle_error = 1000
+    last_xy_angle_error = 1000
+
+    gravity = Vec3(0, 0, -650)
+    boost_direction = BetterVec3(relative_target.normalized())
+
+    for i in range(30):
+        acceleration = boost_direction * 991.6667 + gravity
+        future_car_velocity = BetterVec3(car_velocity + acceleration * trajectory_time)
+        future_car_position = BetterVec3(future_car_velocity * trajectory_time
+                                         - 0.5 * acceleration * trajectory_time ** 2)
+
+        future_target_velocity = BetterVec3(target_velocity + gravity * trajectory_time)
+        future_target_position = BetterVec3(relative_target + future_target_velocity * trajectory_time
+                                         + 0.5 * gravity * trajectory_time ** 2)
+
+        trajectory_time = abs(future_target_position.xyz_length / future_car_velocity.xyz_length) * 0.5
+
+        z_angle_error = 0
+        z_angle_error += calculate_angle_error(future_target_position.z_angle, future_car_position.z_angle)
+        z_angle_error += calculate_angle_error(future_target_position.z_angle, future_car_velocity.z_angle)
+        if abs(z_angle_error) > abs(last_z_angle_error):
+            increment_z_angle *= -0.5
+        boost_direction.z_angle += increment_z_angle
+        last_z_angle_error = z_angle_error
+
+        xy_angle_error = 0
+        # xy_angle_error += calculate_angle_error(future_target_position.xy_angle, future_car_position.xy_angle)
+        xy_angle_error += calculate_angle_error(future_target_position.xy_angle, future_car_velocity.xy_angle)
+        if abs(xy_angle_error) > abs(last_xy_angle_error):
+            increment_xy_angle *= -0.5
+        boost_direction.xy_angle += increment_xy_angle
+        last_xy_angle_error = xy_angle_error
+
+        boost_direction.z = math.sin(boost_direction.z_angle * math.pi / 180)
+        boost_direction.xy_length = math.cos(boost_direction.z_angle * math.pi / 180)
+        boost_direction.x = math.cos(boost_direction.xy_angle * math.pi / 180) * boost_direction.xy_length
+        boost_direction.y = math.sin(boost_direction.xy_angle * math.pi / 180) * boost_direction.xy_length
+
+    return boost_direction * (relative_target.xyz_length * 0.1)
+
+
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = BetterVec3(target - car_location)
 

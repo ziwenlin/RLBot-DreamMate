@@ -4,8 +4,8 @@ from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 import tools.training
-from tools.helper import PIDController, limit_controls, JumpController, find_aerial_direction, calculate_angle_error, \
-    SmoothTargetController, BoostController
+from tools.helper import PIDController, limit_controls, JumpController, calculate_angle_error, \
+    SmoothTargetController, BoostController, find_aerial_target_direction
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
@@ -51,7 +51,7 @@ class TestMonkey(BaseAgent):
         elif self.training.is_finished():
             self.set_game_state(self.training.reset())
 
-        target_direction = find_aerial_direction(ball_location, car_location, car_velocity)
+        target_direction = find_aerial_target_direction(ball_location, ball_velocity, car_location, car_velocity)
         target_direction = self.smooth_target.step(target_direction)
 
         target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
@@ -61,7 +61,8 @@ class TestMonkey(BaseAgent):
 
         target_relative_xy_angle = math.atan2(target_relative_direction.y, target_relative_direction.x) * 180 / math.pi
         target_relative_zy_angle = math.atan2(target_relative_direction.y, target_relative_direction.z) * 180 / math.pi
-        target_relative_z_angle = math.asin(target_relative_direction.z / target_relative_direction.length()) * 180 / math.pi
+        target_relative_z_angle = math.asin(
+            target_relative_direction.z / target_relative_direction.length()) * 180 / math.pi
 
         car_pitch = car_orientation.pitch * 180 / math.pi
         car_roll = car_orientation.roll * 180 / math.pi
@@ -111,7 +112,7 @@ class TestMonkey(BaseAgent):
             if abs(angle) < 45 and my_car.jumped is True and my_car.double_jumped is False:
                 controls.pitch = controls.roll = controls.yaw = 0
                 self.jump.toggle(5)
-            self.boost.toggle(10/abs(angle))
+            self.boost.toggle(10 / abs(angle))
 
         if my_car.is_super_sonic is True:
             self.boost.toggle(0.8)
