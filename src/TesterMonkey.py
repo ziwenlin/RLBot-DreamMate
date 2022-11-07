@@ -75,10 +75,10 @@ class TestMonkey(BaseAgent):
         self.renderer.draw_rect_3d(car_location + car_velocity, 8, 8, True, self.renderer.cyan(), centered=True)
         self.renderer.draw_rect_3d(ball_location + ball_velocity, 8, 8, True, self.renderer.red(), centered=True)
 
-        self.renderer.draw_string_2d(10, 00, 3, 5, f'1: {target_xy_angle:3.1f}', self.renderer.white())
-        self.renderer.draw_string_2d(10, 30, 3, 5, f'2: {target_z_angle:3.1f}', self.renderer.white())
-        self.renderer.draw_string_2d(10, 60, 3, 5, f'3: {car_yaw:3.1f}', self.renderer.white())
-        self.renderer.draw_string_2d(10, 90, 3, 5, f'3: {car_roll:3.1f}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 00, 3, 5, f'1: {my_car.has_wheel_contact}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 30, 3, 5, f'2: {my_car.jumped}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 60, 3, 5, f'3: {my_car.double_jumped}', self.renderer.white())
+        self.renderer.draw_string_2d(10, 90, 3, 5, f'3: {my_car.is_super_sonic}', self.renderer.white())
 
         # Controlling the car
         controls = SimpleControllerState()
@@ -104,6 +104,17 @@ class TestMonkey(BaseAgent):
         if car_location.z < 50 and abs(car_roll) > 170:
             controls.throttle = -1
             controls.roll = 1
+
+        if my_car.has_wheel_contact is False and car_location.z < 500 and ball_direction_z_angle > 60:
+            angle = calculate_angle_error(90, car_pitch)
+            controls.pitch = self.pid_pitch.get_output(angle, 0)
+            if abs(angle) < 45 and my_car.jumped is True and my_car.double_jumped is False:
+                controls.pitch = controls.roll = controls.yaw = 0
+                self.jump.toggle(5)
+            self.boost.toggle(10/abs(angle))
+
+        if my_car.is_super_sonic is True:
+            self.boost.toggle(0.8)
 
         controls.jump = self.jump.step()
         controls.boost = self.boost.step()
