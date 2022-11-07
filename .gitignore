@@ -1,3 +1,4 @@
 # These files should be ignored.
 /.idea/
 /.git/
+/src/temp/
