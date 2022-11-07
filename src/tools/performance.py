@@ -10,7 +10,7 @@ class TickMonitor:
         time_now = time.perf_counter()
         time_dif = time_now - self.last_time
         if time_dif > 0:
-            self.tps = 1000 / time_dif
+            self.tps = 1 / time_dif
         else:
             self.tps = 1
         self.last_time = time_now
