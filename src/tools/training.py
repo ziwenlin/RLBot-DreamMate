@@ -15,6 +15,7 @@ class TrainingController:
         self.boost_amount = 50
         self.packet = GameTickPacket()
         self.last_hit = 0
+        self.last_hit_tick = 0
         self.tick_speed = TickMonitor()
 
     def step(self, packet: GameTickPacket):
@@ -24,7 +25,8 @@ class TrainingController:
         game_speed = packet.game_info.game_speed
         if game_speed == 0:
             game_speed = 1
-        if self.tick_count > 10 * tps / game_speed:
+        tps_ratio = tps / game_speed
+        if self.tick_count > 10 * tps_ratio:
             self.running = False
         if packet.game_ball.physics.location.z < 100:
             self.running = False
@@ -33,7 +35,9 @@ class TrainingController:
             self.running = False
         last_hit = packet.game_ball.latest_touch.time_seconds
         if last_hit != self.last_hit:
+            self.last_hit_tick = self.tick_count + 1 * tps_ratio
             self.last_hit = last_hit
+        if self.tick_count > self.last_hit_tick and self.last_hit_tick > 0:
             self.running = False
 
     def need_boost(self):
@@ -51,9 +55,11 @@ class TrainingController:
 
     def reset(self):
         self.boost_amount = 50
+        self.last_hit_tick = 0
         self.tick_count = 0
         self.running = True
-        return aerial_mid_field_frozen_ball(self.car_index)
+        # return aerial_mid_field_frozen_ball(self.car_index)
+        return aerial_mid_field(self.car_index)
         # return aerial_straight_up(self.car_index)
 
     def is_finished(self):
@@ -74,7 +80,7 @@ def aerial_mid_field(index):
     ball_state = BallState(
         Physics(
             location=Vector3(0, 0, 200),
-            velocity=Vector3(0, 0, 1500),
+            velocity=Vector3(0, 600, 1500),
             angular_velocity=Vector3(0, 0, 0)
         )
     )
