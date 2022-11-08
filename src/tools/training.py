@@ -10,10 +10,14 @@ from tools.performance import TickMonitor
 class TrainingController:
     def __init__(self, car_index):
         self.car_index = car_index
+        self.variation = 0
+
         self.tick_count = 0
+        self.tick_delay = 0
         self.running = True
-        self.boost_amount = 50
-        self.packet = GameTickPacket()
+
+        self.boost_buffer = 50
+        self.packet = GameTickPacket
         self.last_hit = 0
         self.last_hit_tick = 0
         self.tick_speed = TickMonitor()
@@ -31,7 +35,7 @@ class TrainingController:
         if packet.game_ball.physics.location.z < 100:
             self.running = False
         my_car = packet.game_cars[self.car_index]
-        if my_car.boost == 0 and self.boost_amount == 0:
+        if my_car.boost == 0 and self.boost_buffer == 0:
             self.running = False
         last_hit = packet.game_ball.latest_touch.time_seconds
         if last_hit != self.last_hit:
@@ -42,32 +46,40 @@ class TrainingController:
 
     def need_boost(self):
         my_car = self.packet.game_cars[self.car_index]
-        if my_car.boost < 10 and self.boost_amount > 0:
+        if my_car.boost < 10 and self.boost_buffer > 0:
             return True
         return False
 
     def add_boost(self):
         my_car = self.packet.game_cars[self.car_index]
-        boost_given = 50 if self.boost_amount > 50 else self.boost_amount
-        self.boost_amount -= boost_given
+        boost_given = 50 if self.boost_buffer > 50 else self.boost_buffer
+        self.boost_buffer -= boost_given
         new_boost_amount = boost_given + my_car.boost
         return need_boost(self.car_index, new_boost_amount)
 
-    def reset(self):
-        self.boost_amount = 50
+    def reset(self, variation=5):
+        self.boost_buffer = 50
         self.last_hit_tick = 0
         self.tick_count = 0
+        self.tick_delay = 0
         self.running = True
+        self.variation += 1
+        if self.variation > variation:
+            self.variation = 0
         # return aerial_mid_field_frozen_ball(self.car_index)
-        return aerial_mid_field(self.car_index)
+        return aerial_mid_field(self.car_index, self.variation)
         # return aerial_straight_up(self.car_index)
+
+    def is_done(self):
+        self.tick_delay += 1
+        return self.tick_delay > 10
 
     def is_finished(self):
         return self.running is False
 
 
-def aerial_mid_field(index):
-    y = random.randint(1, 4) * -1000
+def aerial_mid_field(index, variation=0):
+    y = (1 + variation) * -1000
     x = random.randint(-3, 3) * 100
     car_state = CarState(
         boost_amount=100, physics=Physics(
