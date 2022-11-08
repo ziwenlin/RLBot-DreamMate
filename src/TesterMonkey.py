@@ -50,6 +50,9 @@ class TestMonkey(BaseAgent):
             self.set_game_state(self.training.add_boost())
         elif self.training.is_finished():
             self.set_game_state(self.training.reset())
+            self.boost.disable()
+            self.jump.disable()
+            return SimpleControllerState()
 
         target_direction = find_aerial_target_direction(ball_location, ball_velocity, car_location, car_velocity)
         # target_direction = self.smooth_target.step(target_direction)
@@ -112,6 +115,7 @@ class TestMonkey(BaseAgent):
         if car_location.z < 50 and abs(car_roll) > 170:
             controls.throttle = -1
             controls.roll = 1
+            self.jump.toggle(1)
 
         if my_car.has_wheel_contact is False and car_location.z < 500 and ball_direction_z_angle > 60:
             angle = calculate_angle_error(90, car_pitch)

@@ -262,6 +262,10 @@ class JumpController:
             self.state = False
         return self.state
 
+    def disable(self):
+        self.state = False
+        self.timer = 0
+
 
 class BoostController:
     def __init__(self):
@@ -281,6 +285,7 @@ class BoostController:
 
     def disable(self):
         self.state = False
+        self.timer = 0
 
     def step(self):
         if self.state is False:
