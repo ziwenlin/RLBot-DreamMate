@@ -21,8 +21,8 @@ class TestMonkey(BaseAgent):
 
         self.pid_steer = PIDController(0.1, 0.0000001, 0.2)
         self.pid_pitch = PIDController(0.5, 0.000001, 4.8)
-        self.pid_roll = PIDController(0.05, 0.000001, 1.2)
-        self.pid_yaw = PIDController(0.2, 0.000001, 4.8)
+        self.pid_roll = PIDController(0.005, 0.000001, 1.2)
+        self.pid_yaw = PIDController(0.02, 0.000001, 2.4)
 
         self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
 
@@ -52,17 +52,17 @@ class TestMonkey(BaseAgent):
             self.set_game_state(self.training.reset())
 
         target_direction = find_aerial_target_direction(ball_location, ball_velocity, car_location, car_velocity)
-        target_direction = self.smooth_target.step(target_direction)
+        # target_direction = self.smooth_target.step(target_direction)
 
         target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
         target_z_angle = math.asin(target_direction.z / target_direction.length()) * 180 / math.pi
         target_xy_angle = math.atan2(target_direction.y, target_direction.x) * 180 / math.pi
         target_zy_angle = math.atan2(target_direction.y, target_direction.z) * 180 / math.pi
 
+        target_direction_length = target_relative_direction.length()
         target_relative_xy_angle = math.atan2(target_relative_direction.y, target_relative_direction.x) * 180 / math.pi
         target_relative_zy_angle = math.atan2(target_relative_direction.y, target_relative_direction.z) * 180 / math.pi
-        target_relative_z_angle = math.asin(
-            target_relative_direction.z / target_relative_direction.length()) * 180 / math.pi
+        target_relative_z_angle = math.asin(target_relative_direction.z / target_direction_length) * 180 / math.pi
 
         car_pitch = car_orientation.pitch * 180 / math.pi
         car_roll = car_orientation.roll * 180 / math.pi
@@ -84,9 +84,9 @@ class TestMonkey(BaseAgent):
         # Controlling the car
         controls = SimpleControllerState()
 
-        if (abs(target_relative_z_angle) < 15 and abs(target_relative_xy_angle) < 15):
+        if abs(target_relative_z_angle) < 20 and abs(target_relative_xy_angle) < 20:
             self.boost.toggle(1)
-        elif (abs(target_relative_z_angle) < 30 and abs(target_relative_xy_angle) < 30):
+        elif abs(target_relative_z_angle) < 40 and abs(target_relative_xy_angle) < 40:
             self.boost.toggle(5 / (abs(target_relative_z_angle) + abs(target_relative_xy_angle)))
 
         if ball_location.z > 300:
@@ -96,6 +96,13 @@ class TestMonkey(BaseAgent):
             controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
             controls.throttle = 0.1
             controls.handbrake = True
+
+        if ball_relative.flat().length() > 2000 and ball_direction_z_angle < 15 and my_car.has_wheel_contact:
+            self.jump.disable()
+            controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
+            controls.throttle = 1
+            controls.handbrake = True
+            self.boost.toggle(0.5)
 
         if my_car.has_wheel_contact is False:
             controls.pitch = self.pid_pitch.get_output(target_relative_z_angle, 0)
