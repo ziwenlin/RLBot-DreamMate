@@ -11,32 +11,37 @@ class TrainingController:
     def __init__(self, car_index):
         self.car_index = car_index
         self.variation = 0
+        self.packet = GameTickPacket
 
+        self.tick_speed = TickMonitor()
         self.tick_count = 0
         self.tick_delay = 0
         self.running = True
 
-        self.boost_buffer = 50
-        self.packet = GameTickPacket
         self.last_hit = 0
         self.last_hit_tick = 0
-        self.tick_speed = TickMonitor()
+
+        self.boost_buffer = 50
 
     def step(self, packet: GameTickPacket):
         self.packet = packet
         self.tick_count += 1
+
         tps = self.tick_speed.step()
         game_speed = packet.game_info.game_speed
         if game_speed == 0:
             game_speed = 1
         tps_ratio = tps / game_speed
+
         if self.tick_count > 10 * tps_ratio:
             self.running = False
-        if packet.game_ball.physics.location.z < 100:
-            self.running = False
+
         my_car = packet.game_cars[self.car_index]
         if my_car.boost == 0 and self.boost_buffer == 0:
             self.running = False
+        if packet.game_ball.physics.location.z < 100:
+            self.running = False
+
         last_hit = packet.game_ball.latest_touch.time_seconds
         if last_hit != self.last_hit:
             self.last_hit_tick = self.tick_count + 1 * tps_ratio
@@ -58,11 +63,12 @@ class TrainingController:
         return need_boost(self.car_index, new_boost_amount)
 
     def reset(self, variation=5):
-        self.boost_buffer = 50
         self.last_hit_tick = 0
+        self.boost_buffer = 50
         self.tick_count = 0
         self.tick_delay = 0
         self.running = True
+
         self.variation += 1
         if self.variation > variation:
             self.variation = 0
