@@ -280,7 +280,7 @@ class BoostController:
         if sureness < 0:
             return
         self.hold_time = 5 * sureness
-        self.release_time = 5 * (1-sureness)
+        self.release_time = 5 * (1 - sureness)
         self.state = True
 
     def disable(self):
@@ -297,6 +297,7 @@ class BoostController:
         elif self.timer > self.hold_time:
             return False
         return True
+
 
 class SmoothTargetController:
     def __init__(self, kp, ki, kd):
@@ -326,19 +327,40 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
     gravity = Vec3(0, 0, -650)
     boost_direction = BetterVec3(relative_target.normalized())
 
-    if relative_target.xyz_length < 1000:
+    if relative_target.xyz_length < trajectory_speed / 2:
         return car_velocity
 
     for i in range(30):
         acceleration = boost_direction * 991.6667 + gravity
-        future_car_velocity = BetterVec3(car_velocity + acceleration * trajectory_time)
-        future_car_position = BetterVec3(car_velocity * trajectory_time + 0.5 * acceleration * trajectory_time ** 2)
+        try:
+            acceleration_sss = (boost_direction - car_velocity.normalized()) * 991.6667 + gravity
+        except ZeroDivisionError:
+            acceleration_sss = acceleration
+
+        trajectory_time_before_sss = (2200 - trajectory_speed) / acceleration.length()
+        trajectory_time_after_sss = 0
+        if trajectory_time_before_sss < 0:
+            trajectory_time_before_sss = 0
+        if trajectory_time < trajectory_time_before_sss:
+            trajectory_time_after_sss = trajectory_time - trajectory_time_before_sss
+        else:
+            trajectory_time_before_sss = trajectory_time
+
+        future_car_velocity = BetterVec3(car_velocity + acceleration * trajectory_time_before_sss
+                                         + acceleration_sss * trajectory_time_after_sss
+                                         )
+        future_car_position = BetterVec3(car_velocity * trajectory_time_before_sss
+                                         + 0.5 * acceleration * trajectory_time_before_sss ** 2
+                                         + future_car_velocity * trajectory_time_after_sss
+                                         + 0.5 * acceleration_sss * trajectory_time_after_sss ** 2
+                                         )
 
         future_target_velocity = BetterVec3(target_velocity + gravity * trajectory_time)
         future_target_position = BetterVec3(relative_target + target_velocity * trajectory_time
                                             + 0.5 * gravity * trajectory_time ** 2)
 
-        trajectory_average_speed = future_car_velocity.xyz_length * (1 - (time_before_sss / trajectory_speed))
+        trajectory_average_speed = (0.5 * (future_car_velocity.xyz_length + car_velocity.length()) * trajectory_time_before_sss
+                                    + future_car_velocity.xyz_length * trajectory_time_after_sss) / trajectory_time
         trajectory_time = abs(future_target_position.xyz_length / trajectory_average_speed)
 
         z_angle_error = 0
