@@ -20,9 +20,9 @@ class TestMonkey(BaseAgent):
         self.training = tools.training.TrainingController(index)
 
         self.pid_steer = PIDController(0.1, 0.0000001, 0.2)
-        self.pid_pitch = PIDController(0.5, 0.000001, 4.8)
+        self.pid_pitch = PIDController(0.3, 0.000001, 4.8)
         self.pid_roll = PIDController(0.005, 0.000001, 1.2)
-        self.pid_yaw = PIDController(0.02, 0.000001, 2.4)
+        self.pid_yaw = PIDController(0.01, 0.000001, 0.6)
 
         self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
 
@@ -114,8 +114,8 @@ class TestMonkey(BaseAgent):
             controls.yaw = self.pid_yaw.get_output(target_relative_xy_angle, 0)
 
         if car_location.z < 50 and abs(car_roll) > 170:
+            controls.roll = self.pid_roll.get_output(0, car_roll)
             controls.throttle = -1
-            controls.roll = 1
             self.jump.toggle(1)
 
         if my_car.has_wheel_contact is False and car_location.z < 500 and ball_direction_z_angle > 60:

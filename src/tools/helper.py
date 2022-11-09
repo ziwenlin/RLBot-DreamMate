@@ -80,6 +80,10 @@ class PIDController:
         self.i_value += error
         return p + i + d
 
+    def reset(self):
+        self.d_value = 0
+        self.i_value = 0
+
 
 def clip_to_field(location: Vec3):
     # Check field
