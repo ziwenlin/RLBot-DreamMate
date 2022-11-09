@@ -86,11 +86,11 @@ class TrainingController:
 
 
 def aerial_mid_field(index, variation=0):
-    y = (1 + variation) * -1000
-    x = random.randint(-3, 3) * 100
+    y_car = (1 + variation) * -1000
+    x_car = random.randint(-3, 3) * 100
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(x, y, 20),
+            location=Vector3(x_car, y_car, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)
@@ -114,11 +114,11 @@ def aerial_mid_field(index, variation=0):
 
 
 def aerial_side_field(index, variation=0):
-    x_ball = (1 + variation) * -200
+    x_ball = (1 + variation) * -100
     x_car = random.randint(-3, 3) * 100
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(x_car, -2000, 20),
+            location=Vector3(x_car, -3000, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)
@@ -126,7 +126,7 @@ def aerial_side_field(index, variation=0):
     )
     ball_state = BallState(
         Physics(
-            location=Vector3(2 * x_ball, 0, 200),
+            location=Vector3(3 * x_ball, 0, 200),
             velocity=Vector3(-x_ball, 300, 1500),
             angular_velocity=Vector3(0, 0, 0)
         )
@@ -142,11 +142,11 @@ def aerial_side_field(index, variation=0):
 
 
 def aerial_straight_up(index):
-    y = random.randint(3, 16) * -100
-    x = random.randint(-3, 3) * 50
+    y_car = random.randint(3, 16) * -100
+    x_car = random.randint(-3, 3) * 50
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(x, y, 20),
+            location=Vector3(x_car, y_car, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)
@@ -170,11 +170,11 @@ def aerial_straight_up(index):
 
 
 def aerial_mid_field_frozen_ball(index):
-    y = random.randint(1, 4) * -1000
-    x = random.randint(-3, 3) * 1000
+    y_car = random.randint(1, 4) * -1000
+    x_car = random.randint(-3, 3) * 1000
     car_state = CarState(
         boost_amount=100, physics=Physics(
-            location=Vector3(x, y, 20),
+            location=Vector3(x_car, y_car, 20),
             rotation=Rotator(0, math.pi / 2, 0),
             velocity=Vector3(0, 0, 0),
             angular_velocity=Vector3(0, 0, 0)
