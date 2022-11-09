@@ -50,7 +50,7 @@ class TestMonkey(BaseAgent):
             self.set_game_state(self.training.add_boost())
         elif self.training.is_finished():
             if self.training.is_done():
-                self.set_game_state(self.training.reset())
+                self.set_game_state(self.training.reset(10))
             self.boost.disable()
             self.jump.disable()
             return SimpleControllerState()

@@ -73,7 +73,8 @@ class TrainingController:
         if self.variation > variation:
             self.variation = 0
         # return aerial_mid_field_frozen_ball(self.car_index)
-        return aerial_mid_field(self.car_index, self.variation)
+        # return aerial_mid_field(self.car_index, self.variation)
+        return aerial_side_field(self.car_index, self.variation)
         # return aerial_straight_up(self.car_index)
 
     def is_done(self):
@@ -110,6 +111,35 @@ def aerial_mid_field(index, variation=0):
         cars={index: car_state},
         game_info=game_info
     )
+
+
+def aerial_side_field(index, variation=0):
+    x_ball = (1 + variation) * -200
+    x_car = random.randint(-3, 3) * 100
+    car_state = CarState(
+        boost_amount=100, physics=Physics(
+            location=Vector3(x_car, -2000, 20),
+            rotation=Rotator(0, math.pi / 2, 0),
+            velocity=Vector3(0, 0, 0),
+            angular_velocity=Vector3(0, 0, 0)
+        )
+    )
+    ball_state = BallState(
+        Physics(
+            location=Vector3(2 * x_ball, 0, 200),
+            velocity=Vector3(-x_ball, 300, 1500),
+            angular_velocity=Vector3(0, 0, 0)
+        )
+    )
+    game_info = GameInfoState(
+        # game_speed=0.8
+    )
+    return GameState(
+        ball=ball_state,
+        cars={index: car_state},
+        game_info=game_info
+    )
+
 
 def aerial_straight_up(index):
     y = random.randint(3, 16) * -100
