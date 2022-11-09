@@ -320,8 +320,8 @@ class SmoothTargetController:
 def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = BetterVec3(target - car_location)
 
-    trajectory_speed = car_velocity.length() + 1
-    trajectory_time = abs(relative_target.xyz_length / trajectory_speed) * 2
+    car_speed = car_velocity.length() + 1
+    trajectory_time = abs(relative_target.xyz_length / car_speed)
 
     increment_z_angle = 10
     increment_xy_angle = 10
@@ -331,7 +331,7 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
     gravity = Vec3(0, 0, -650)
     boost_direction = BetterVec3(relative_target.normalized())
 
-    if relative_target.xyz_length < trajectory_speed / 2:
+    if relative_target.xyz_length < car_speed / 2:
         return car_velocity
 
     for i in range(30):
@@ -341,7 +341,7 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
         except ZeroDivisionError:
             acceleration_sss = acceleration
 
-        trajectory_time_before_sss = (2200 - trajectory_speed) / acceleration.length()
+        trajectory_time_before_sss = (2200 - car_speed) / acceleration.length()
         trajectory_time_after_sss = 0
         if trajectory_time_before_sss < 0:
             trajectory_time_before_sss = 0
@@ -363,9 +363,11 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
         future_target_position = BetterVec3(relative_target + target_velocity * trajectory_time
                                             + 0.5 * gravity * trajectory_time ** 2)
 
-        trajectory_average_speed = (0.5 * (future_car_velocity.xyz_length + car_velocity.length()) * trajectory_time_before_sss
-                                    + future_car_velocity.xyz_length * trajectory_time_after_sss) / trajectory_time
-        trajectory_time = abs(future_target_position.xyz_length / trajectory_average_speed)
+        ratio_before_sss = (trajectory_time_before_sss / trajectory_time)
+        ratio_after_sss = (trajectory_time_after_sss / trajectory_time)
+        trajectory_speed = (0.5 * (future_car_velocity.xyz_length + car_speed) * ratio_before_sss
+                            + future_car_velocity.xyz_length * ratio_after_sss)
+        trajectory_time = future_target_position.xyz_length / trajectory_speed
 
         z_angle_error = 0
         z_angle_error += calculate_angle_error(future_target_position.z_angle, future_car_position.z_angle)
