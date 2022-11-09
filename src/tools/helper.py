@@ -1,4 +1,5 @@
 import math
+from typing import Dict, Union
 
 from rlbot.agents.base_agent import SimpleControllerState
 
@@ -266,7 +267,7 @@ class JumpController:
             self.state = False
         return self.state
 
-    def disable(self):
+    def reset(self):
         self.state = False
         self.timer = 0
 
@@ -287,7 +288,7 @@ class BoostController:
         self.release_time = 5 * (1 - sureness)
         self.state = True
 
-    def disable(self):
+    def reset(self):
         self.state = False
         self.timer = 0
 
@@ -315,6 +316,46 @@ class SmoothTargetController:
         self.target.y += self.pid_y.get_output(target.y, self.target.y)
         self.target.z += self.pid_z.get_output(target.z, self.target.z)
         return self.target
+
+    def reset(self):
+        self.target = Vec3()
+        self.pid_x.reset()
+        self.pid_y.reset()
+        self.pid_z.reset()
+
+
+class ControllerManager:
+    def __init__(self):
+        self.controllers: Dict[str, Union[
+            PIDController, SmoothTargetController, JumpController, BoostController
+        ]] = {}
+        self.previous = {}
+
+    def add_controller(self, controller, name):
+        self.controllers[name] = controller
+        self.previous[name] = 0
+
+    def step(self):
+        for name in self.controllers:
+            controller = self.controllers[name]
+            previous = self.previous[name]
+            if controller is PIDController:
+                if controller.i_value == previous:
+                    controller.reset()
+                previous = controller.i_value
+            elif controller is SmoothTargetController:
+                if controller.target == previous:
+                    controller.reset()
+                previous = controller.target
+            self.previous[name] = previous
+
+    def reset(self):
+        for name in self.controllers:
+            controller = self.controllers[name]
+            if controller is PIDController or controller is SmoothTargetController:
+                controller.reset()
+            elif controller is BoostController or controller is JumpController:
+                controller.reset()
 
 
 def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_location: Vec3, car_velocity: Vec3):

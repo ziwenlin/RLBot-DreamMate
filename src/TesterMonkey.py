@@ -5,7 +5,7 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 import tools.training
 from tools.helper import PIDController, limit_controls, JumpController, calculate_angle_error, \
-    SmoothTargetController, BoostController, find_aerial_target_direction
+    SmoothTargetController, BoostController, find_aerial_target_direction, ControllerManager
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
@@ -18,6 +18,7 @@ class TestMonkey(BaseAgent):
         self.boost = BoostController()
 
         self.training = tools.training.TrainingController(index)
+        self.control_manager = ControllerManager()
 
         self.pid_steer = PIDController(0.1, 0.0000001, 0.2)
         self.pid_pitch = PIDController(0.3, 0.000001, 4.8)
@@ -25,6 +26,13 @@ class TestMonkey(BaseAgent):
         self.pid_yaw = PIDController(0.01, 0.000001, 0.6)
 
         self.smooth_target = SmoothTargetController(0.2, 0.000001, 0.4)
+        self.control_manager.add_controller(self.smooth_target, 'smooth')
+        self.control_manager.add_controller(self.pid_steer, 'steer')
+        self.control_manager.add_controller(self.pid_pitch, 'pitch')
+        self.control_manager.add_controller(self.pid_roll, 'roll')
+        self.control_manager.add_controller(self.pid_yaw, 'yaw')
+        self.control_manager.add_controller(self.boost, 'boost')
+        self.control_manager.add_controller(self.jump, 'jump')
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         # Gather some information about our car
@@ -50,9 +58,8 @@ class TestMonkey(BaseAgent):
             self.set_game_state(self.training.add_boost())
         elif self.training.is_finished():
             if self.training.is_done():
-                self.set_game_state(self.training.reset(10))
-            self.boost.disable()
-            self.jump.disable()
+                self.set_game_state(self.training.reset(5))
+            self.control_manager.reset()
             return SimpleControllerState()
 
         target_direction = find_aerial_target_direction(ball_location, ball_velocity, car_location, car_velocity)
@@ -94,7 +101,7 @@ class TestMonkey(BaseAgent):
             self.boost.toggle(5 / (abs(target_relative_z_angle) + abs(target_relative_xy_angle)))
 
         if my_car.has_wheel_contact is True:
-            self.jump.disable()
+            self.jump.reset()
             if abs(target_relative_xy_angle) < 15:
                 self.jump.toggle(30)
             controls.steer = self.pid_steer.get_output(target_relative_xy_angle, 0)
@@ -123,6 +130,7 @@ class TestMonkey(BaseAgent):
         if my_car.is_super_sonic is True:
             self.boost.toggle(0.8)
 
+        self.control_manager.step()
         controls.jump = self.jump.step()
         controls.boost = self.boost.step()
         return limit_controls(controls)
