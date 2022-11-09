@@ -93,20 +93,14 @@ class TestMonkey(BaseAgent):
         elif abs(target_relative_z_angle) < 40 and abs(target_relative_xy_angle) < 40:
             self.boost.toggle(5 / (abs(target_relative_z_angle) + abs(target_relative_xy_angle)))
 
-        if ball_location.z > 300:
-            error_xy_angle = calculate_angle_error(ball_xy_angle, car_velocity_xy_angle)
-            if abs(error_xy_angle) < 15 and my_car.has_wheel_contact:
-                self.jump.toggle(30)
-            controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
-            controls.throttle = 0.1
-            controls.handbrake = True
-
-        if ball_relative.flat().length() > 2000 and ball_direction_z_angle < 15 and my_car.has_wheel_contact:
+        if my_car.has_wheel_contact is True:
             self.jump.disable()
-            controls.steer = self.pid_steer.get_output(ball_direction_xy_angle, 0)
-            controls.throttle = 1
-            controls.handbrake = True
-            self.boost.toggle(0.5)
+            if abs(target_relative_xy_angle) < 15:
+                self.jump.toggle(30)
+            controls.steer = self.pid_steer.get_output(target_relative_xy_angle, 0)
+            controls.throttle = 0.1
+            controls.handbrake = abs(target_relative_xy_angle) > 20
+
 
         if my_car.has_wheel_contact is False:
             controls.pitch = self.pid_pitch.get_output(target_relative_z_angle, 0)
