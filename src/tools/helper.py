@@ -437,8 +437,8 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = BetterVec3(target - car_location)
 
-    trajectory_speed = car_velocity.length() + 1
-    trajectory_time = abs(relative_target.xyz_length / trajectory_speed) * 0.5
+    car_speed = car_velocity.length() + 1
+    trajectory_time = abs(relative_target.xyz_length / car_speed)
 
     increment_z_angle = 10
     increment_xy_angle = 10
@@ -454,7 +454,8 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
         future_car_position = BetterVec3(relative_target - car_velocity * trajectory_time
                                          - 0.5 * acceleration * trajectory_time ** 2)
 
-        trajectory_time = abs(relative_target.xyz_length / future_car_velocity.xyz_length) * 0.25
+        trajectory_speed = 0.5 * (future_car_velocity.xyz_length + car_speed)
+        trajectory_time = abs(relative_target.xyz_length / trajectory_speed)
 
         z_angle_error = calculate_angle_error(relative_target.z_angle, future_car_position.z_angle)
         z_angle_error += calculate_angle_error(relative_target.z_angle, future_car_velocity.z_angle)
