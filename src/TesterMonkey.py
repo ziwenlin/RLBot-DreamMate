@@ -5,7 +5,8 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 import tools.training
 from tools.helper import PIDController, limit_controls, JumpController, calculate_angle_error, \
-    SmoothTargetController, BoostController, find_aerial_target_direction, ControllerManager
+    SmoothTargetController, BoostController, find_aerial_target_direction, ControllerManager, find_aerial_direction, \
+    find_aerial_target, get_target_goal, find_shot, find_aerial_ball
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
@@ -62,7 +63,22 @@ class TestMonkey(BaseAgent):
             self.control_manager.reset()
             return SimpleControllerState()
 
-        target_direction = find_aerial_target_direction(ball_location, ball_velocity, car_location, car_velocity)
+        # goal_a, goal_b = get_target_goal(self.team)
+        # target_location = find_aerial_ball(car_location, car_velocity, self.get_ball_prediction_struct(), packet)
+        # target_shot = find_shot(goal_a, goal_b, target_location, car_location)
+        # target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
+
+        goal_a, goal_b = get_target_goal(self.team)
+        target_location = find_aerial_target(ball_location, ball_velocity, car_location, car_velocity)
+        target_shot = find_shot(goal_a, goal_b, target_location, car_location)
+        target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
+
+        # target_shot = find_shot(goal_a, goal_b, ball_location, car_location)
+        # target_location = find_aerial_target(target_shot, ball_velocity, car_location, car_velocity)
+        # target_direction = find_aerial_direction(target_location, car_location, car_velocity)
+        # target_location = target_shot = ball_location
+
+        # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
         # target_direction = self.smooth_target.step(target_direction)
 
         target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
@@ -82,10 +98,15 @@ class TestMonkey(BaseAgent):
         # Draw some things to help understand what the bot is thinking
         self.renderer.draw_line_3d(car_location, car_location + target_direction, self.renderer.orange())
         self.renderer.draw_line_3d(car_location, car_location + car_velocity, self.renderer.cyan())
-        self.renderer.draw_line_3d(ball_location, ball_location + ball_velocity, self.renderer.red())
+        self.renderer.draw_line_3d(ball_location, ball_location + ball_velocity, self.renderer.cyan())
+        self.renderer.draw_line_3d(car_location, target_location, self.renderer.red())
+
         self.renderer.draw_rect_3d(car_location + target_direction, 8, 8, True, self.renderer.orange(), centered=True)
         self.renderer.draw_rect_3d(car_location + car_velocity, 8, 8, True, self.renderer.cyan(), centered=True)
-        self.renderer.draw_rect_3d(ball_location + ball_velocity, 8, 8, True, self.renderer.red(), centered=True)
+        self.renderer.draw_rect_3d(ball_location + ball_velocity, 8, 8, True, self.renderer.cyan(), centered=True)
+        self.renderer.draw_rect_3d(target_location, 16, 16, True, self.renderer.red(), centered=True)
+
+        self.renderer.draw_rect_3d(target_shot, 16, 16, True, self.renderer.red(), centered=True)
 
         self.renderer.draw_string_2d(10, 00, 3, 5, f'1: {my_car.has_wheel_contact}', self.renderer.white())
         self.renderer.draw_string_2d(10, 30, 3, 5, f'2: {my_car.jumped}', self.renderer.white())
@@ -102,10 +123,13 @@ class TestMonkey(BaseAgent):
 
         if my_car.has_wheel_contact is True:
             self.jump.reset()
-            if abs(target_relative_xy_angle) < 15:
+            if abs(target_relative_xy_angle) < 15 and target_relative_z_angle > 60:
                 self.jump.toggle(30)
             controls.steer = self.pid_steer.get_output(target_relative_xy_angle, 0)
-            controls.throttle = 0.1
+            if target_relative_z_angle < 60:
+                controls.throttle = 1
+            else:
+                controls.throttle = 0.1
             controls.handbrake = abs(target_relative_xy_angle) > 20
 
 

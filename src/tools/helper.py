@@ -267,7 +267,7 @@ class JumpController:
         else:
             self.timer = 0
             self.state = False
-        return self.state
+        return True
 
     def reset(self):
         self.state = False
