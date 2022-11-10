@@ -86,7 +86,7 @@ class TrainingController:
 
 
 def aerial_mid_field(index, variation=0):
-    y_car = (1 + variation) * -1000
+    y_car = (1 + variation) * -500
     x_car = random.randint(-3, 3) * 100
     car_state = CarState(
         boost_amount=100, physics=Physics(
@@ -103,13 +103,9 @@ def aerial_mid_field(index, variation=0):
             angular_velocity=Vector3(0, 0, 0)
         )
     )
-    game_info = GameInfoState(
-        # game_speed=0.8
-    )
     return GameState(
         ball=ball_state,
         cars={index: car_state},
-        game_info=game_info
     )
 
 
@@ -131,18 +127,14 @@ def aerial_side_field(index, variation=0):
             angular_velocity=Vector3(0, 0, 0)
         )
     )
-    game_info = GameInfoState(
-        # game_speed=0.8
-    )
     return GameState(
         ball=ball_state,
         cars={index: car_state},
-        game_info=game_info
     )
 
 
-def aerial_straight_up(index):
-    y_car = random.randint(3, 16) * -100
+def aerial_straight_up(index, variation=0):
+    y_car = (1 + variation) * -300
     x_car = random.randint(-3, 3) * 50
     car_state = CarState(
         boost_amount=100, physics=Physics(
@@ -159,19 +151,15 @@ def aerial_straight_up(index):
             angular_velocity=Vector3(0, 0, 0)
         )
     )
-    game_info = GameInfoState(
-        # game_speed=0.8
-    )
     return GameState(
         ball=ball_state,
         cars={index: car_state},
-        game_info=game_info
     )
 
 
-def aerial_mid_field_frozen_ball(index):
-    y_car = random.randint(1, 4) * -1000
-    x_car = random.randint(-3, 3) * 1000
+def aerial_mid_field_frozen_ball(index, variation=0):
+    y_car = (1 + variation) * -1000
+    x_car = random.randint(-3, 3) * 500
     car_state = CarState(
         boost_amount=100, physics=Physics(
             location=Vector3(x_car, y_car, 20),
@@ -187,13 +175,9 @@ def aerial_mid_field_frozen_ball(index):
             angular_velocity=Vector3(0, 0, 0)
         )
     )
-    game_info = GameInfoState(
-        # game_speed=0.8
-    )
     return GameState(
         ball=ball_state,
         cars={index: car_state},
-        game_info=game_info
     )
 
 
