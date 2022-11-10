@@ -16,7 +16,7 @@ class TrainingController:
         self.tick_speed = TickMonitor()
         self.tick_count = 0
         self.tick_delay = 0
-        self.running = True
+        self.running = False
 
         self.last_hit = 0
         self.last_hit_tick = 0
@@ -62,7 +62,7 @@ class TrainingController:
         new_boost_amount = boost_given + my_car.boost
         return need_boost(self.car_index, new_boost_amount)
 
-    def reset(self, variation=5):
+    def reset(self, training='', variation=5):
         self.last_hit_tick = 0
         self.boost_buffer = 50
         self.tick_count = 0
@@ -72,10 +72,16 @@ class TrainingController:
         self.variation += 1
         if self.variation > variation:
             self.variation = 0
-        # return aerial_mid_field_frozen_ball(self.car_index)
-        # return aerial_mid_field(self.car_index, self.variation)
-        return aerial_side_field(self.car_index, self.variation)
-        # return aerial_straight_up(self.car_index)
+
+        if training == 'mid field frozen ball':
+            return aerial_mid_field_frozen_ball(self.car_index, self.variation)
+        elif training == 'mid field':
+            return aerial_mid_field(self.car_index, self.variation)
+        elif training == 'side field':
+            return aerial_side_field(self.car_index, self.variation)
+        elif training == 'straight up':
+            return aerial_straight_up(self.car_index)
+        return aerial_mid_field(self.car_index, self.variation)
 
     def is_done(self):
         self.tick_delay += 1
