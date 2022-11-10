@@ -13,7 +13,7 @@ def find_shot(target_a, target_b, ball_location, car_location):
     try:
         car_to_ball = ball_location - car_location
         car_to_ball_direction = car_to_ball.normalized()
-    except:
+    except ZeroDivisionError:
         return ball_location
 
     ball_to_left_target_direction = (target_a - ball_location).normalized()
@@ -30,7 +30,9 @@ def find_shot(target_a, target_b, ball_location, car_location):
         car_to_ball_perpendicular = car_to_ball.cross(Vec3(0, 0, side_of_approach_direction)).normalized()
         adjustment = abs(car_to_ball.flat().ang_to(direction_of_approach.flat())) * 2560
         final_target = offset_ball_location + (car_to_ball_perpendicular * adjustment)
-    except:
+    except ZeroDivisionError:
+        return offset_ball_location
+    except ValueError:
         return offset_ball_location
     return final_target
 
