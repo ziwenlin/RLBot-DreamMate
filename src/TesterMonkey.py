@@ -74,11 +74,17 @@ class TestMonkey(BaseAgent):
         target_shot = find_shot(goal_a, goal_b, target_location, car_location)
         target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
 
+        # goal_a, goal_b = get_target_goal(self.team)
         # target_shot = find_shot(goal_a, goal_b, ball_location, car_location)
         # target_location = find_aerial_target(target_shot, ball_velocity, car_location, car_velocity)
         # target_direction = find_aerial_direction(target_location, car_location, car_velocity)
-        # target_location = target_shot = ball_location
 
+        # goal_a, goal_b = get_target_goal(self.team)
+        # target_location = target_shot = find_shot(goal_a, goal_b, ball_location, car_location)
+        # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
+        # target_direction = self.smooth_target.step(target_direction)
+
+        # target_location = target_shot = ball_location
         # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
         # target_direction = self.smooth_target.step(target_direction)
 
