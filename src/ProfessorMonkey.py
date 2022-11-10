@@ -3,7 +3,8 @@ import math
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket, FieldInfoPacket, GoalInfo
 
-from tools.helper import find_shot, PIDController, find_boost_in_path, clip_to_field, predict_ball_fall, get_target_goal
+from tools.helper import find_shot, find_boost_in_path, clip_to_field, predict_ball_fall, get_target_goal
+from tools.contollers import PIDController
 from tools.performance import TickMonitor
 from util.ball_prediction_analysis import find_slice_at_time
 from util.boost_pad_tracker import BoostPadTracker

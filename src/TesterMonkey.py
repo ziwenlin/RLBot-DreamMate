@@ -4,9 +4,10 @@ from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 import tools.training
-from tools.helper import PIDController, limit_controls, JumpController, calculate_angle_error, \
-    SmoothTargetController, BoostController, find_aerial_target_direction, ControllerManager, find_aerial_direction, \
+from tools.helper import limit_controls, calculate_angle_error, \
+    find_aerial_target_direction, find_aerial_direction, \
     find_aerial_target, get_target_goal, find_shot, find_aerial_ball
+from tools.contollers import PIDController, JumpController, BoostController, SmoothTargetController, ControllerManager
 from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
