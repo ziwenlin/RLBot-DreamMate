@@ -366,19 +366,34 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
 
     increment_z_angle = 10
     increment_xy_angle = 10
+    increment_boost = 1
     last_z_angle_error = 1000
     last_xy_angle_error = 1000
+    last_boost_error = 1000
 
-    gravity = Vec3(0, 0, -650)
+    gravity = Vec3(0, 0, 650)
     boost_direction = BetterVec3(relative_target.normalized())
 
     if relative_target.xyz_length < car_speed / 2:
         return car_velocity
 
-    for i in range(30):
-        acceleration = boost_direction * 991.6667 + gravity
+    for i in range(15):
+        future_target_position = BetterVec3(relative_target + target_velocity * trajectory_time
+                                            + 0.5 * -gravity * trajectory_time ** 2)
+        needed_car_velocity = future_target_position / trajectory_time
+        needed_car_acceleration = (needed_car_velocity - car_velocity) / trajectory_time
+        boost_force = needed_car_acceleration + gravity
+
+        boost_error = 991.667 - boost_force.length()
+        if abs(boost_error) > abs(last_boost_error):
+            increment_boost *= -0.5
+        trajectory_time += increment_boost
+        last_boost_error = boost_error
+
+    for i in range(15):
+        acceleration = boost_direction * 991.6667 - gravity
         try:
-            acceleration_sss = (boost_direction - car_velocity.normalized()) * 991.6667 + gravity
+            acceleration_sss = (boost_direction - car_velocity.normalized()) * 991.6667 - gravity
         except ZeroDivisionError:
             acceleration_sss = acceleration
 
@@ -399,10 +414,8 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
                                          + future_car_velocity * trajectory_time_after_sss
                                          + 0.5 * acceleration_sss * trajectory_time_after_sss ** 2
                                          )
-
-        future_target_velocity = BetterVec3(target_velocity + gravity * trajectory_time)
         future_target_position = BetterVec3(relative_target + target_velocity * trajectory_time
-                                            + 0.5 * gravity * trajectory_time ** 2)
+                                            + 0.5 * -gravity * trajectory_time ** 2)
 
         ratio_before_sss = (trajectory_time_before_sss / trajectory_time)
         ratio_after_sss = (trajectory_time_after_sss / trajectory_time)
