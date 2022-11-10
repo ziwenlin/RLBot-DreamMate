@@ -447,6 +447,41 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
     return boost_direction * (relative_target.xyz_length * 0.2)
 
 
+def find_aerial_target(target: Vec3, target_velocity: Vec3, car_location: Vec3, car_velocity: Vec3):
+    relative_target = (target - car_location)
+
+    car_speed = car_velocity.length() + 1
+    trajectory_time = abs(relative_target.length() / car_speed) if car_speed > 500 else 1
+
+    increment_boost = 1
+    last_boost_error = 1000
+
+    gravity = Vec3(0, 0, 650)
+
+    if trajectory_time < 0.5:
+        return target + target_velocity * trajectory_time + 0.5 * -gravity * trajectory_time ** 2
+
+    for i in range(15):
+        future_target_position = (target + target_velocity * trajectory_time
+                                  + 0.5 * -gravity * trajectory_time ** 2)
+        future_relative_position = future_target_position - car_location
+        needed_car_velocity = future_relative_position / trajectory_time
+        needed_car_acceleration = (needed_car_velocity - car_velocity) / trajectory_time
+        needed_boost_force = needed_car_acceleration + gravity
+        boost_force = needed_boost_force.length()
+
+        if boost_force < 991:
+            break
+
+        boost_error = 991.667 - boost_force
+        if abs(boost_error) > abs(last_boost_error):
+            increment_boost *= -0.5
+        trajectory_time += increment_boost
+        last_boost_error = boost_error
+
+    return target + target_velocity * trajectory_time + 0.5 * -gravity * trajectory_time ** 2
+
+
 def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = BetterVec3(target - car_location)
 
