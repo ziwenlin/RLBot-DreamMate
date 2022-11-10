@@ -58,7 +58,7 @@ class TestMonkey(BaseAgent):
             self.set_game_state(self.training.add_boost())
         elif self.training.is_finished():
             if self.training.is_done():
-                self.set_game_state(self.training.reset(5))
+                self.set_game_state(self.training.reset(''))
             self.control_manager.reset()
             return SimpleControllerState()
 
@@ -114,21 +114,21 @@ class TestMonkey(BaseAgent):
             controls.roll = self.pid_roll.get_output(target_relative_zy_angle, 0)
             controls.yaw = self.pid_yaw.get_output(target_relative_xy_angle, 0)
 
-        if car_location.z < 50 and abs(car_roll) > 170:
-            controls.roll = self.pid_roll.get_output(0, car_roll)
-            controls.throttle = -1
-            self.jump.toggle(1)
+        # if car_location.z < 50 and abs(car_roll) > 170:
+        #     controls.roll = self.pid_roll.get_output(0, car_roll)
+        #     controls.throttle = -1
+        #     self.jump.toggle(1)
 
-        if my_car.has_wheel_contact is False and car_location.z < 500 and ball_direction_z_angle > 60:
-            angle = calculate_angle_error(90, car_pitch)
-            controls.pitch = self.pid_pitch.get_output(angle, 0)
-            if abs(angle) < 45 and my_car.jumped is True and my_car.double_jumped is False:
-                controls.pitch = controls.roll = controls.yaw = 0
-                self.jump.toggle(5)
-            self.boost.toggle(10 / abs(angle))
-
-        if my_car.is_super_sonic is True:
-            self.boost.toggle(0.8)
+        # if my_car.has_wheel_contact is False and car_location.z < 500 and ball_direction_z_angle > 60:
+        #     angle = calculate_angle_error(90, car_pitch)
+        #     controls.pitch = self.pid_pitch.get_output(angle, 0)
+        #     if abs(angle) < 45 and my_car.jumped is True and my_car.double_jumped is False:
+        #         controls.pitch = controls.roll = controls.yaw = 0
+        #         self.jump.toggle(5)
+        #     self.boost.toggle(10 / abs(angle))
+        #
+        # if my_car.is_super_sonic is True:
+        #     self.boost.toggle(0.8)
 
         self.control_manager.step()
         controls.jump = self.jump.step()

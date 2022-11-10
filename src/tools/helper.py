@@ -449,13 +449,54 @@ def find_aerial_target_direction(target: Vec3, target_velocity: Vec3, car_locati
     return boost_direction * (relative_target.xyz_length * 0.2)
 
 
+def find_aerial_ball(car_location: Vec3, car_velocity: Vec3, ball_prediction_struct, packet):
+    game_time = packet.game_info.seconds_elapsed
+    ball_slice = find_slice_at_time(ball_prediction_struct, game_time)
+    if ball_slice is None:
+        return car_location + car_velocity * 0.5
+
+    target_location = Vec3(ball_slice.physics.location)
+    relative_target = target_location - car_location
+
+    car_speed = car_velocity.length() + 1
+    trajectory_time = abs(relative_target.length() / car_speed) if car_speed > 200 else 1
+
+    increment_boost = 0.1
+    last_boost_error = 1000
+
+    gravity = Vec3(0, 0, 650)
+
+    for i in range(30):
+        ball_in_future = find_slice_at_time(ball_prediction_struct, game_time + trajectory_time)
+        if ball_in_future is None: break
+        future_ball_position = Vec3(ball_in_future.physics.location)
+        future_relative_position = future_ball_position - car_location
+        needed_car_velocity = future_relative_position / trajectory_time
+        needed_car_acceleration = (needed_car_velocity - car_velocity) / trajectory_time
+        needed_boost_force = needed_car_acceleration + gravity
+        boost_force = needed_boost_force.length()
+
+        if boost_force < 991.667:
+            break
+        boost_error = 991.667 - boost_force
+        if abs(boost_error) > abs(last_boost_error):
+            increment_boost *= -0.5
+        trajectory_time += increment_boost
+        last_boost_error = boost_error
+
+    new_target = find_slice_at_time(ball_prediction_struct, game_time + trajectory_time - 0.05)
+    if new_target is None:
+        return car_location + car_velocity * 0.5
+    return Vec3(new_target.physics.location)
+
+
 def find_aerial_target(target: Vec3, target_velocity: Vec3, car_location: Vec3, car_velocity: Vec3):
     relative_target = (target - car_location)
 
     car_speed = car_velocity.length() + 1
-    trajectory_time = abs(relative_target.length() / car_speed) if car_speed > 500 else 1
+    trajectory_time = abs(relative_target.length() / car_speed) if car_speed > 200 else 1
 
-    increment_boost = 1
+    increment_boost = 0.1
     last_boost_error = 1000
 
     gravity = Vec3(0, 0, 650)
@@ -504,8 +545,8 @@ def find_aerial_direction(target: Vec3, car_location: Vec3, car_velocity: Vec3):
     for i in range(30):
         acceleration = boost_direction * 991.666 - gravity
         future_car_velocity = BetterVec3(car_velocity + acceleration * trajectory_time)
-        future_car_position = BetterVec3(relative_target - car_velocity * trajectory_time
-                                         - 0.5 * acceleration * trajectory_time ** 2)
+        # future_car_position = BetterVec3(relative_target - car_velocity * trajectory_time
+        #                                  - 0.5 * acceleration * trajectory_time ** 2)
 
         trajectory_speed = 0.5 * (future_car_velocity.xyz_length + car_speed)
         trajectory_time = abs(relative_target.xyz_length / trajectory_speed)
