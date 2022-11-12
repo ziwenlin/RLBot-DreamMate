@@ -1,4 +1,4 @@
-# Monkey RLBot Family
+# Rhino RLBot Family
 This repository contains the monkey bot family.
 
 ## Quick Start

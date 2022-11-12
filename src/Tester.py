@@ -88,15 +88,16 @@ class TestMonkey(BaseAgent):
         # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
         # target_direction = self.smooth_target.step(target_direction)
 
-        target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
         target_z_angle = math.asin(target_direction.z / target_direction.length()) * 180 / math.pi
         target_xy_angle = math.atan2(target_direction.y, target_direction.x) * 180 / math.pi
         target_zy_angle = math.atan2(target_direction.y, target_direction.z) * 180 / math.pi
 
-        target_direction_length = target_relative_direction.length()
+        target_relative_direction = relative_location(Vec3(), car_orientation, target_direction)
+        target_relative_direction_length = target_relative_direction.length()
+
         target_relative_xy_angle = math.atan2(target_relative_direction.y, target_relative_direction.x) * 180 / math.pi
         target_relative_zy_angle = math.atan2(target_relative_direction.y, target_relative_direction.z) * 180 / math.pi
-        target_relative_z_angle = math.asin(target_relative_direction.z / target_direction_length) * 180 / math.pi
+        target_relative_z_angle = math.asin(target_relative_direction.z / target_relative_direction_length) * 180 / math.pi
 
         car_pitch = car_orientation.pitch * 180 / math.pi
         car_roll = car_orientation.roll * 180 / math.pi
