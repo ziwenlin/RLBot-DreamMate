@@ -8,7 +8,7 @@ from util.drive import limit_to_safe_range
 from util.vec import Vec3
 
 
-def find_shot(target_a, target_b, ball_location, car_location):
+def find_shot(target_a: Vec3, target_b: Vec3, ball_location: Vec3, car_location: Vec3):
     try:
         car_to_ball = ball_location - car_location
         car_to_ball_direction = car_to_ball.normalized()
@@ -36,13 +36,7 @@ def find_shot(target_a, target_b, ball_location, car_location):
     return final_target
 
 
-def clamp2D(direction, start, end):
-    """
-
-    :param Vec3 direction:
-    :param Vec3 start:
-    :param Vec3 end:
-    """
+def clamp2D(direction: Vec3, start: Vec3, end: Vec3):
     is_right = direction.dot(end.cross(Vec3(0, 0, -1))) < 0
     is_left = direction.dot(start.cross(Vec3(0, 0, -1))) > 0
 
@@ -83,14 +77,7 @@ def clip_to_field(location: Vec3):
     return clip_to_box(location, mid_p, mid_n)
 
 
-def clip_to_box(location, box_p, box_n):
-    """
-
-    :param Vec3 location:
-    :param Vec3 box_p:
-    :param Vec3 box_n:
-    """
-
+def clip_to_box(location: Vec3, box_p: Vec3, box_n: Vec3):
     def clip_within_box(value, corner_a, corner_b):
         if value > corner_a:
             return corner_a
@@ -104,21 +91,8 @@ def clip_to_box(location, box_p, box_n):
     return Vec3(x, y, z)
 
 
-def check_valid_location(location, box_p, box_n):
-    """
-
-    :param Vec3 location:
-    :param Vec3 box_p:
-    :param Vec3 box_n:
-    """
-
-    def check_within_box(check, corner_a, corner_b):
-        """
-
-        :param float check:
-        :param float corner_a:
-        :param float corner_b:
-        """
+def check_valid_location(location: Vec3, box_p: Vec3, box_n: Vec3):
+    def check_within_box(check: float, corner_a: float, corner_b: float):
         return corner_a > check > corner_b
 
     x = check_within_box(location.x, box_p.x, box_n.x)
