@@ -1,5 +1,5 @@
 # Rhino RLBot Family
-This repository contains the monkey bot family.
+This repository contains the rhino bot family.
 
 ## Quick Start
 The easiest way to start a Python bot is demonstrated here!
