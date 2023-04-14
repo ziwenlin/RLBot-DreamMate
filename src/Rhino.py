@@ -14,7 +14,7 @@ from util.sequence import Sequence, ControlStep
 from util.vec import Vec3
 
 
-class MyBot(BaseAgent):
+class ChargingRhino(BaseAgent):
 
     def __init__(self, name, team, index):
         super().__init__(name, team, index)

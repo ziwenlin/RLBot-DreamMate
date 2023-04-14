@@ -12,7 +12,7 @@ from util.orientation import Orientation, relative_location
 from util.vec import Vec3
 
 
-class TestMonkey(BaseAgent):
+class FlyingEagle(BaseAgent):
 
     def __init__(self, name, team, index):
         super().__init__(name, team, index)

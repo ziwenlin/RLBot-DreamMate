@@ -1,5 +1,5 @@
-# Rhino RLBot Family
-This repository contains the rhino bot family.
+# RLBot DreamMate Family
+This repository contains the DreamMate bot family.
 
 ## Quick Start
 The easiest way to start a Python bot is demonstrated here!
