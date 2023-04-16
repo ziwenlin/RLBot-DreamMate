@@ -69,10 +69,10 @@ class FlyingEagle(BaseAgent):
         # target_shot = find_shot(goal_a, goal_b, target_location, car_location)
         # target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
 
-        goal_a, goal_b = get_target_goal(self.team)
-        target_location = find_aerial_target(ball_location, ball_velocity, car_location, car_velocity)
-        target_shot = find_shot(goal_a, goal_b, target_location, car_location)
-        target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
+        # goal_a, goal_b = get_target_goal(self.team)
+        # target_location = find_aerial_target(ball_location, ball_velocity, car_location, car_velocity)
+        # target_shot = find_shot(goal_a, goal_b, target_location, car_location)
+        # target_direction = find_aerial_direction(target_shot, car_location, car_velocity)
 
         # goal_a, goal_b = get_target_goal(self.team)
         # target_shot = find_shot(goal_a, goal_b, ball_location, car_location)
@@ -84,9 +84,9 @@ class FlyingEagle(BaseAgent):
         # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
         # target_direction = self.smooth_target.step(target_direction)
 
-        # target_location = target_shot = ball_location
-        # target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
-        # target_direction = self.smooth_target.step(target_direction)
+        target_location = target_shot = ball_location
+        target_direction = find_aerial_target_direction(target_location, ball_velocity, car_location, car_velocity)
+        target_direction = self.smooth_target.step(target_direction)
 
         target_z_angle = math.asin(target_direction.z / target_direction.length()) * 180 / math.pi
         target_xy_angle = math.atan2(target_direction.y, target_direction.x) * 180 / math.pi
