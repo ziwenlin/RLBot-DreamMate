@@ -1,20 +1,26 @@
 import random
 import tkinter as tk
-from multiprocessing import Process
+from multiprocessing import Process, Event
+from threading import Event as TEvent
 
 from gui.graph import Graph
 
 
-class ApplicationProcess(Process):
+class AppProcess(Process):
+    def __init__(self):
+        super().__init__(name='Tkinter')
+        self.stop_event = Event()
+
     def run(self) -> None:
-        app = ApplicationController()
+        app = Application(self.stop_event)
         app.mainloop()
         app.quit()
 
 
-class ApplicationController(tk.Tk):
-    def __init__(self):
+class Application(tk.Tk):
+    def __init__(self, event: TEvent):
         super().__init__()
+        self.event = event
         self.frame = tk.Frame(self)
         self.frame.pack(fill='both', expand=True)
 
@@ -25,6 +31,12 @@ class ApplicationController(tk.Tk):
         self.graph.plot.set_ylim(-1, 10)
 
         self.after(100, lambda: self.poll_data())
+        self.after(100, lambda: self.poll_running())
+
+    def poll_running(self):
+        if self.event.is_set():
+            self.quit()
+        self.after(100, lambda: self.poll_running())
 
     def poll_data(self):
         data_y = self.graph.line.get_ydata()
@@ -39,9 +51,9 @@ class ApplicationController(tk.Tk):
 
 
 def main():
-    app_thread = ApplicationProcess()
-    app_thread.start()
-    app_thread.join()
+    process = AppProcess()
+    process.start()
+    process.join()
 
 
 if __name__ == '__main__':
