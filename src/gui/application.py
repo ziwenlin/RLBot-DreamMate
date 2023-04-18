@@ -7,9 +7,9 @@ from multiprocessing import Process, Queue, Event
 from gui.graph import Graph
 
 
-class AppThread(threading.Thread):
-    def __init__(self):
-        super().__init__(name='Tkinter')
+class AppRunnable:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.stop_event = Event()
         self.queue_in = Queue()
 
@@ -25,19 +25,14 @@ class AppThread(threading.Thread):
         self.stop_event.set()
 
 
-class AppProcess(Process):
+class AppThread(AppRunnable, threading.Thread):
     def __init__(self):
         super().__init__(name='Tkinter')
-        self.stop_event = Event()
-        self.queue_in = Queue()
 
-    def run(self) -> None:
-        app = Application(self.stop_event, self.queue_in)
-        app.mainloop()
-        app.quit()
 
-    def stop(self):
-        self.stop_event.set()
+class AppProcess(AppRunnable, Process):
+    def __init__(self):
+        super().__init__(name='Tkinter')
 
 
 class Application(tk.Tk):
@@ -85,6 +80,7 @@ class Application(tk.Tk):
         if key not in self.graph.lines:
             self.graph.create_line(key)
         self.graph.extend_line(key, value)
+
 
 def main():
     process = AppProcess()
