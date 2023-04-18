@@ -68,16 +68,23 @@ class Application(tk.Tk):
         self.after(100, lambda: self.poll_data())
         if self.queue_in.empty():
             return
-        value = self.queue_in.get()
-        data_y = self.graph.line.get_ydata()
-        data_y += (value,)
-        data_x = self.graph.line.get_xdata()
-        data_x += (1 + data_x[-1] if len(data_x) > 0 else 0,)
-        self.graph.line.set_ydata(data_y)
-        self.graph.line.set_xdata(data_x)
-        self.graph.plot.set_xlim(-1, len(data_x) + 1)
+        while not self.queue_in.empty():
+            message = self.queue_in.get()
+            self.process_message(message)
+        self.graph.view_line('line')
         self.graph.draw()
 
+    def process_message(self, message):
+        if type(message) is str:
+            message: str
+            key, value = message.split(':')
+            value = float(value)
+        else:
+            value = float(message)
+            key = 'line'
+        if key not in self.graph.lines:
+            self.graph.create_line(key)
+        self.graph.extend_line(key, value)
 
 def main():
     process = AppProcess()
