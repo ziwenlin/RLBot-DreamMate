@@ -1,10 +1,28 @@
 import random
+import threading
 import time
 import tkinter as tk
 from multiprocessing import Process, Queue, Event
-from threading import Event as TEvent
 
 from gui.graph import Graph
+
+
+class AppThread(threading.Thread):
+    def __init__(self):
+        super().__init__(name='Tkinter')
+        self.stop_event = Event()
+        self.queue_in = Queue()
+
+    def send(self, message):
+        self.queue_in.put(message)
+
+    def run(self) -> None:
+        app = Application(self.stop_event, self.queue_in)
+        app.mainloop()
+        app.quit()
+
+    def stop(self):
+        self.stop_event.set()
 
 
 class AppProcess(Process):
@@ -23,7 +41,7 @@ class AppProcess(Process):
 
 
 class Application(tk.Tk):
-    def __init__(self, event: TEvent, queue_in: Queue):
+    def __init__(self, event: threading.Event, queue_in: Queue):
         super().__init__()
         self.event = event
         self.queue_in = queue_in
