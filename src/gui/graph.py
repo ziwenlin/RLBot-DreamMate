@@ -22,9 +22,7 @@ class Graph(tk.Frame):
         self.canvas.get_tk_widget().pack_configure()
 
         self.lines: dict[str, Line2D] = {}
-        self.line: Line2D = Line2D([], [], linewidth=1)
         self.plot: Axes = self.figure.add_subplot()
-        self.plot.add_line(self.line)
 
     def draw(self):
         if self.winfo_viewable() == 0:
