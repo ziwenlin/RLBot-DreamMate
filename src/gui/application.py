@@ -71,16 +71,20 @@ class Application(tk.Tk):
         self.graph.draw()
 
     def process_message(self, message):
+        point = None
+        key = 'line'
         if type(message) is str:
             message: str
-            key, value = message.split(':')
-            value = float(value)
+            data = message.split(':')
+            key = data.pop(0)
+            value = float(data.pop(0))
+            if len(data) > 0:
+                point = float(data.pop(0))
         else:
             value = float(message)
-            key = 'line'
         if key not in self.graph.lines:
             self.graph.create_line(key)
-        self.graph.extend_line(key, value)
+        self.graph.extend_line(key, value, point)
 
 
 def main():
