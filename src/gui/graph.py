@@ -10,16 +10,18 @@ from matplotlib.lines import Line2D
 class Graph(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        cnf = {'fill': 'both', 'expand': True}
 
         self.figure: Figure = Figure()
+        self.figure.subplots_adjust(0.06, 0.05, 0.985, 0.98)
 
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack_configure()
+        self.canvas.get_tk_widget().pack_configure(cnf)
 
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
-        self.canvas.get_tk_widget().pack_configure()
+        self.canvas.get_tk_widget().pack_configure(cnf)
 
         self.lines: dict[str, Line2D] = {}
         self.plot: Axes = self.figure.add_subplot()
