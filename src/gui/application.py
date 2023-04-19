@@ -66,7 +66,8 @@ class Application(tk.Tk):
         while not self.queue_in.empty():
             message = self.queue_in.get()
             self.process_message(message)
-        self.graph.view_line('line')
+        key = next(iter(self.graph.lines.keys()))
+        self.graph.view_line(key)
         self.graph.draw()
 
     def process_message(self, message):
