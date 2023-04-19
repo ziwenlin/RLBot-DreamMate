@@ -36,8 +36,10 @@ class Graph(tk.Frame):
         if key in self.lines:
             return
         index = len(self.lines)
-        line = Line2D([], [], linewidth=1, color=f'C{index}')
+        line = Line2D([0], [0], linewidth=1, color=f'C{index}')
+        line.set_label(s=key)
         self.plot.add_line(line)
+        self.plot.legend(loc='upper right')
         self.lines[key] = line
 
     def remove_line(self, key):
