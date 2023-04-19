@@ -54,15 +54,14 @@ class Graph(tk.Frame):
         self.plot.set_xlim(min(data_x) - 1, max(data_x) + 1)
         self.plot.set_ylim(min(data_y) - 1, max(data_y) + 1)
 
-    def extend_line(self, key, value):
+    def extend_line(self, key, value, point=None):
         line = self.lines[key]
         data_y = line.get_ydata()
         data_x = line.get_xdata()
 
-        if len(data_x) == 0:
-            data_x += (0,)
-        else:
-            data_x += (1 + data_x[-1],)
+        if point is None:
+            point = max(data_x) + 1
+        data_x += (point,)
         data_y += (value,)
         line.set_ydata(data_y)
         line.set_xdata(data_x)
