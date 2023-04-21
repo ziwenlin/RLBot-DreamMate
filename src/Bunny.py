@@ -43,6 +43,7 @@ class BunnyHop(BaseAgent):
         if self.tick == 0:
             self.start_time = time_elapsed
 
+        self.previous_time = self.current_time
         self.current_time = time_elapsed - self.start_time
 
         self.timed_jump(packet, 0, 0.0)
@@ -52,7 +53,6 @@ class BunnyHop(BaseAgent):
 
         self.plot_data(packet, 0, 4)
 
-        self.previous_time = self.current_time
         self.tick += 1
         return self.controls
 
@@ -87,14 +87,18 @@ class BunnyHop(BaseAgent):
             self.start_pos = Vec3(my_car.physics.location)
             self.start_vel = Vec3(my_car.physics.velocity)
             self.predict_jump(self.current_time + time_offset, jump_hold)
-            print('reset', self.previous_time, self.current_time, Vec3(my_car.physics.location))
+            print('reset', self.previous_time, self.current_time, Vec3(my_car.physics.location),
+                  Vec3(my_car.physics.velocity))
 
-        if self.previous_time < time_trigger + time_offset <= self.current_time:
+        time_trigger += time_offset
+        if self.previous_time < time_trigger <= self.current_time:
             self.controls.jump = True
-        if self.previous_time < time_trigger + time_offset + jump_hold <= self.current_time:
+        if self.previous_time < time_trigger + jump_hold <= self.current_time:
             self.controls.jump = True
-        if time_trigger < self.current_time - time_offset <= time_trigger + jump_hold:
+        if time_trigger < self.current_time <= time_trigger + jump_hold:
             self.controls.jump = True
+        if self.previous_time > time_trigger + jump_hold:
+            self.controls.jump = False
 
     def predict_jump(self, start_time, hold_time):
         start_tick = start_time * 120 + 1
