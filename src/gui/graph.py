@@ -32,11 +32,13 @@ class Graph(tk.Frame):
         self.canvas.flush_events()
         self.canvas.draw_idle()
 
-    def create_line(self, key):
+    def create_line(self, key, value=0, point=0):
         if key in self.lines:
             return
+        if point is None:
+            point = 0
         index = len(self.lines)
-        line = Line2D([0], [0], linewidth=1, color=f'C{index}')
+        line = Line2D([point], [value], linewidth=1, color=f'C{index}')
         line.set_label(s=key)
         self.plot.add_line(line)
         self.plot.legend(loc='upper right')

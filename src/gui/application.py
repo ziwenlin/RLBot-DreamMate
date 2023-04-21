@@ -83,7 +83,7 @@ class Application(tk.Tk):
         else:
             value = float(message)
         if key not in self.graph.lines:
-            self.graph.create_line(key)
+            self.graph.create_line(key, value=value, point=point - 1)
         self.graph.extend_line(key, value, point)
 
 
