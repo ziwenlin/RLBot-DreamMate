@@ -2,7 +2,7 @@ import random
 import threading
 import time
 import tkinter as tk
-from multiprocessing import Process, Queue, Event
+import multiprocessing
 
 from gui.graph import Graph
 
@@ -10,13 +10,16 @@ from gui.graph import Graph
 class AppRunnable:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.stop_event = Event()
-        self.queue_in = Queue()
+        self.stop_event = multiprocessing.Event()
+        self.queue_in = multiprocessing.Queue()
 
     def send(self, message):
         self.queue_in.put(message)
 
     def run(self) -> None:
+        for thread in threading.enumerate():
+            if thread.name == 'Tkinter' and thread is not self:
+                thread.join()
         app = Application(self.stop_event, self.queue_in)
         app.mainloop()
         app.quit()
@@ -30,13 +33,13 @@ class AppThread(AppRunnable, threading.Thread):
         super().__init__(name='Tkinter')
 
 
-class AppProcess(AppRunnable, Process):
+class AppProcess(AppRunnable, multiprocessing.Process):
     def __init__(self):
         super().__init__(name='Tkinter')
 
 
 class Application(tk.Tk):
-    def __init__(self, event: threading.Event, queue_in: Queue):
+    def __init__(self, event: threading.Event, queue_in: multiprocessing.Queue):
         super().__init__()
         self.event = event
         self.queue_in = queue_in
