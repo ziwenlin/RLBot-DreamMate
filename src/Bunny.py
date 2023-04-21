@@ -1,5 +1,3 @@
-import time
-
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
@@ -103,6 +101,8 @@ class BunnyHop(BaseAgent):
     def predict_jump(self, start_time, hold_time):
         start_tick = start_time * 120 + 1
         hold_ticks = hold_time * 120
+        if hold_ticks > 0.2 * 120:
+            hold_ticks = 0.2 * 120 + 1
         increment = 1 / 120
 
         jump_force = 291.667
@@ -113,14 +113,18 @@ class BunnyHop(BaseAgent):
         position = 0
         velocity = 0
         acceleration = 0
-        self.gui_thread.send(f'prediction acceleration:{acceleration}:{start_tick}')
         self.gui_thread.send(f'prediction velocity:{velocity}:{start_tick}')
         self.gui_thread.send(f'prediction position:{position}:{start_tick}')
+        self.gui_thread.send(f'prediction acceleration:{acceleration}:{start_tick}')
 
-        velocity_previous = 0
-        velocity = jump_force
         for t in range(200):
-            if t < 3 or t < hold_ticks and t < 0.2 * 120:
+            # Variables that needed immediate updates
+            velocity_previous = velocity
+
+            # Control variables
+            if t == 0:  # or t is double jump
+                velocity += jump_force  # - gravity * increment
+            if t < 3 or t < hold_ticks:
                 velocity += jump_hold * increment
             if t < 7:
                 velocity += sticky * increment
@@ -129,11 +133,14 @@ class BunnyHop(BaseAgent):
             position += velocity * increment
             acceleration = (velocity - velocity_previous) / increment
 
-            if position < 0 and t > 7:
-                position = 0
-                velocity = 0
+            # Safety clipping values
+            if position < -100:
+                position = -100
+            if acceleration < 10 * -100:
+                acceleration = 10 * -100
+            if velocity < -400:
+                velocity = -400
 
-            velocity_previous = velocity
             tick = start_tick + t + 1
             self.gui_thread.send(f'prediction acceleration:{acceleration / 100}:{tick}')
             self.gui_thread.send(f'prediction velocity:{velocity}:{tick}')
