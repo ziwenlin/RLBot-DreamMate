@@ -110,6 +110,9 @@ class BunnyHop(BaseAgent):
         gravity = -650
         sticky = gravity * 0.5
 
+        wheel_force = -gravity
+        wheel_height = 13
+
         position = 0
         velocity = 0
         acceleration = 0
@@ -129,6 +132,17 @@ class BunnyHop(BaseAgent):
             if t < 7:
                 velocity += sticky * increment
 
+            if position <= wheel_height and t > 7:
+                # First wheel touches the ground
+                wheel_suspension = wheel_force * self.wheel_behaviour(position, velocity)
+                velocity += wheel_suspension * increment
+
+            if position < -1 and t > 7 and velocity < 0:
+                # All wheels touches the ground
+                car_suspension = -velocity / increment / 2
+                velocity += car_suspension * increment
+
+            # Physics of simulation
             velocity += gravity * increment
             position += velocity * increment
             acceleration = (velocity - velocity_previous) / increment
@@ -145,3 +159,11 @@ class BunnyHop(BaseAgent):
             self.gui_thread.send(f'prediction acceleration:{acceleration / 100}:{tick}')
             self.gui_thread.send(f'prediction velocity:{velocity}:{tick}')
             self.gui_thread.send(f'prediction position:{position}:{tick}')
+
+    def wheel_behaviour(self, position, velocity):
+        wheel_velocity = 1 - velocity * 0.08
+        wheel_position = position * 2.5 - 1
+        wheel_multiplier = wheel_velocity - wheel_position
+        if wheel_multiplier < 0:
+            wheel_multiplier = 0
+        return wheel_multiplier
