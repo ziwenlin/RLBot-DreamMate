@@ -18,8 +18,9 @@ class BunnyHop(BaseAgent):
         self.current_time = 0
         self.previous_time = 0
 
-        self.start_pos = Vec3()
-        self.start_vel = Vec3()
+        self.jump_time_offset = 0
+        self.jump_position = Vec3()
+        self.jump_velocity = Vec3()
 
         self.previous_acceleration = 0
         self.previous_velocity = 0
@@ -65,8 +66,8 @@ class BunnyHop(BaseAgent):
         position = Vec3(my_car.physics.location)
         velocity = Vec3(my_car.physics.velocity)
 
-        height = position.z - self.start_pos.z
-        speed = velocity.z - self.start_vel.z
+        height = position.z - self.jump_position.z
+        speed = velocity.z - self.jump_velocity.z
         acceleration = (speed - self.previous_velocity) / (self.current_time - self.previous_time)
         self.previous_velocity = speed
         self.previous_acceleration = acceleration
@@ -90,17 +91,18 @@ class BunnyHop(BaseAgent):
         time_offset = 10 * increment
 
         if self.previous_time < time_trigger <= self.current_time:
-            self.start_pos = Vec3(my_car.physics.location)
-            self.start_vel = Vec3(my_car.physics.velocity)
+            self.jump_position = Vec3(my_car.physics.location)
+            self.jump_velocity = Vec3(my_car.physics.velocity)
+            self.jump_time_offset = 0
             target = lambda: self.predict_jump(self.current_time + time_offset, jump_hold)
             threading.Thread(target=target).start()
-            print('reset', self.previous_time, self.current_time, Vec3(my_car.physics.location),
-                  Vec3(my_car.physics.velocity))
 
         time_trigger += time_offset
         if self.previous_time < time_trigger <= self.current_time:
             # Start of the jump
+            self.jump_time_offset = time_trigger - self.current_time + increment
             self.controls.jump = True
+        time_trigger += self.jump_time_offset
         if self.previous_time < time_trigger + jump_hold <= self.current_time:
             # Somewhat end of the jump
             self.controls.jump = True
@@ -133,7 +135,7 @@ class BunnyHop(BaseAgent):
         self.gui_thread.send(f'prediction position:{position}:{start_tick}')
         self.gui_thread.send(f'prediction acceleration:{acceleration}:{start_tick}')
 
-        for t in range(200):
+        for t in range(200 + int(hold_ticks * 2)):
             # Variables that needed immediate updates
             velocity_previous = velocity
 
