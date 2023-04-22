@@ -1,3 +1,5 @@
+import threading
+
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
@@ -90,7 +92,8 @@ class BunnyHop(BaseAgent):
         if self.previous_time < time_trigger <= self.current_time:
             self.start_pos = Vec3(my_car.physics.location)
             self.start_vel = Vec3(my_car.physics.velocity)
-            self.predict_jump(self.current_time + time_offset, jump_hold)
+            target = lambda: self.predict_jump(self.current_time + time_offset, jump_hold)
+            threading.Thread(target=target).start()
             print('reset', self.previous_time, self.current_time, Vec3(my_car.physics.location),
                   Vec3(my_car.physics.velocity))
 
