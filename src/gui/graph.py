@@ -13,15 +13,15 @@ class Graph(tk.Frame):
         cnf = {'fill': 'both', 'expand': True}
 
         self.figure: Figure = Figure()
-        self.figure.subplots_adjust(0.06, 0.05, 0.985, 0.98)
+        self.figure.subplots_adjust(0.065, 0.055, 0.985, 0.98)
 
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack_configure(cnf)
+        self.canvas.get_tk_widget().pack_configure(cnf, side='bottom')
 
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self, pack_toolbar=False)
         self.toolbar.update()
-        self.canvas.get_tk_widget().pack_configure(cnf)
+        self.toolbar.pack_configure(fill='x', side='top')
 
         self.lines: dict[str, Line2D] = {}
         self.plot: Axes = self.figure.add_subplot()
