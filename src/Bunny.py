@@ -10,7 +10,7 @@ class BunnyHop(BaseAgent):
         super().__init__(name, index, team)
         self.controls = SimpleControllerState()
 
-        self.tick = -600
+        self.tick = -120
 
         self.start_time = 0
         self.current_time = 0
@@ -37,7 +37,8 @@ class BunnyHop(BaseAgent):
         time_elapsed = packet.game_info.seconds_elapsed
 
         if self.tick < 0:
-            self.start_time = time_elapsed + 1
+            self.current_time = increment = -1 / 120
+            self.start_time = time_elapsed - increment
         if self.tick == 0:
             self.start_time = time_elapsed
 
@@ -46,10 +47,10 @@ class BunnyHop(BaseAgent):
 
         self.timed_jump(packet, 0, 0.0)
         self.timed_jump(packet, 2, 0.1)
-        # self.timed_jump(packet, 4, 0.2)
-        # self.timed_jump(packet, 6, 0.5)
+        self.timed_jump(packet, 4, 0.2)
+        self.timed_jump(packet, 7, 0.5)
 
-        self.plot_data(packet, 0, 4)
+        self.plot_data(packet, 0, 10)
 
         self.tick += 1
         return self.controls
@@ -74,12 +75,17 @@ class BunnyHop(BaseAgent):
         self.gui_thread.send(f'position:{height}:{current_tick}')
 
     def timed_jump(self, packet, time_trigger, jump_hold):
-        if time_trigger > self.current_time and self.current_time < time_trigger + 2:
+        if self.current_time < time_trigger:
+            return
+        if self.previous_time > time_trigger + 0.3:
             return
         my_car = packet.game_cars[0]
-        if jump_hold < 3 / 120:
-            jump_hold = 2 / 120
-        time_offset = 10 / 120
+        increment = 1 / 120
+        if jump_hold < 3 * increment:
+            jump_hold = 2 * increment
+        if jump_hold > 0.2:
+            jump_hold = 0.2
+        time_offset = 10 * increment
 
         if self.previous_time < time_trigger <= self.current_time:
             self.start_pos = Vec3(my_car.physics.location)
@@ -90,19 +96,23 @@ class BunnyHop(BaseAgent):
 
         time_trigger += time_offset
         if self.previous_time < time_trigger <= self.current_time:
+            # Start of the jump
             self.controls.jump = True
         if self.previous_time < time_trigger + jump_hold <= self.current_time:
+            # Somewhat end of the jump
             self.controls.jump = True
-        if time_trigger < self.current_time <= time_trigger + jump_hold:
+        if time_trigger < self.previous_time <= time_trigger + jump_hold:
+            # Middle of the jump
             self.controls.jump = True
         if self.previous_time > time_trigger + jump_hold:
+            # End of the jump
             self.controls.jump = False
 
     def predict_jump(self, start_time, hold_time):
         start_tick = start_time * 120 + 1
-        hold_ticks = hold_time * 120
+        hold_ticks = hold_time * 120 + 1
         if hold_ticks > 0.2 * 120:
-            hold_ticks = 0.2 * 120 + 1
+            hold_ticks = 0.2 * 120
         increment = 1 / 120
 
         jump_force = 291.667
