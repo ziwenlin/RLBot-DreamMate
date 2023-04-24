@@ -89,6 +89,8 @@ class Application(tk.Tk):
         else:
             value = float(message)
         if key not in self.graph.lines:
+            if point is None:
+                point = 0
             self.graph.create_line(key, value=value, point=point - 1)
         self.graph.extend_line(key, value, point)
 
@@ -97,11 +99,12 @@ def main():
     process = AppProcess()
     process.start()
 
+    import timeit
     for _ in range(10):
         time.sleep(0.1)
-        process.queue_in.put(random.random() * 10 - 1)
+        print(timeit.timeit(lambda: process.send(random.random() * 10 - 1), number=10000))
 
-    time.sleep(2)
+    time.sleep(10)
     process.stop()
 
     time.sleep(1)
