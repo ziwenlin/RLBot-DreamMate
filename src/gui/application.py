@@ -70,7 +70,8 @@ class Application(tk.Tk):
             if self.queue_in.empty():
                 break
             message = self.queue_in.get()
-            self.process_message(message)
+            data = self.process_message(message)
+            self.process_graph(data)
         key = next(iter(self.graph.lines.keys()))
         self.graph.size_line(key, 5000)
         self.graph.view_line(key)
@@ -88,6 +89,10 @@ class Application(tk.Tk):
                 point = float(data.pop(0))
         else:
             value = float(message)
+        return key, value, point
+
+    def process_graph(self, data):
+        key, value, point = data
         if key not in self.graph.lines:
             if point is None:
                 point = 0
