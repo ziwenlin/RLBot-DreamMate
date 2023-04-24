@@ -66,10 +66,13 @@ class Application(tk.Tk):
         self.after(100, lambda: self.poll_data())
         if self.queue_in.empty():
             return
-        while not self.queue_in.empty():
+        for _ in range(1000):
+            if self.queue_in.empty():
+                break
             message = self.queue_in.get()
             self.process_message(message)
         key = next(iter(self.graph.lines.keys()))
+        self.graph.size_line(key, 5000)
         self.graph.view_line(key)
         self.graph.draw()
 
