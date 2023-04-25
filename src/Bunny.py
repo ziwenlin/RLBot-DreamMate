@@ -4,6 +4,7 @@ from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from gui.application import AppThread
+from tools.timers import TimedActionController
 from util.vec import Vec3
 
 
@@ -11,14 +12,11 @@ class BunnyHop(BaseAgent):
     def __init__(self, name, index, team):
         super().__init__(name, index, team)
         self.controls = SimpleControllerState()
+        self.action_controller = TimedActionController(0)
 
-        self.tick = -120
-
-        self.start_time = 0
         self.current_time = 0
         self.previous_time = 0
 
-        self.jump_time_offset = 0
         self.jump_position = Vec3()
         self.jump_velocity = Vec3()
 
@@ -29,6 +27,11 @@ class BunnyHop(BaseAgent):
         self.gui_thread = AppThread()
         self.gui_thread.start()
 
+        self.timed_jump(0, 0.0)
+        self.timed_jump(2, 0.1)
+        self.timed_jump(4, 0.2)
+        self.timed_jump(7, 0.5)
+
     def retire(self):
         self.gui_thread.stop()
         self.gui_thread.join()
@@ -36,26 +39,12 @@ class BunnyHop(BaseAgent):
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         self.controls = SimpleControllerState()
+        self.action_controller.step(packet)
 
-        time_elapsed = packet.game_info.seconds_elapsed
-
-        if self.tick < 0:
-            self.current_time = increment = -1 / 120
-            self.start_time = time_elapsed - increment
-        if self.tick == 0:
-            self.start_time = time_elapsed
-
-        self.previous_time = self.current_time
-        self.current_time = time_elapsed - self.start_time
-
-        self.timed_jump(packet, 0, 0.0)
-        self.timed_jump(packet, 2, 0.1)
-        self.timed_jump(packet, 4, 0.2)
-        self.timed_jump(packet, 7, 0.5)
+        self.previous_time = self.action_controller.previous_time
+        self.current_time = self.action_controller.current_time
 
         self.plot_data(packet, 0, 10)
-
-        self.tick += 1
         return self.controls
 
     def plot_data(self, packet, time_start, time_end):
@@ -77,12 +66,7 @@ class BunnyHop(BaseAgent):
         self.gui_thread.send(f'velocity:{speed}:{current_tick}')
         self.gui_thread.send(f'position:{height}:{current_tick}')
 
-    def timed_jump(self, packet, time_trigger, jump_hold):
-        if self.current_time < time_trigger:
-            return
-        if self.previous_time > time_trigger + 0.3:
-            return
-        my_car = packet.game_cars[0]
+    def timed_jump(self, time_trigger, jump_hold):
         increment = 1 / 120
         if jump_hold < 3 * increment:
             jump_hold = 2 * increment
@@ -90,28 +74,19 @@ class BunnyHop(BaseAgent):
             jump_hold = 0.2
         time_offset = 10 * increment
 
-        if self.previous_time < time_trigger <= self.current_time:
+        def start(packet):
+            my_car = packet.game_cars[0]
             self.jump_position = Vec3(my_car.physics.location)
             self.jump_velocity = Vec3(my_car.physics.velocity)
-            self.jump_time_offset = 0
             target = lambda: self.predict_jump(self.current_time + time_offset, jump_hold)
             threading.Thread(target=target).start()
 
+        def jump(_):
+            self.controls.jump = True
+
+        self.action_controller.create(time_trigger, 0, start)
         time_trigger += time_offset
-        if self.previous_time < time_trigger <= self.current_time:
-            # Start of the jump
-            self.jump_time_offset = time_trigger - self.current_time + increment
-            self.controls.jump = True
-        time_trigger += self.jump_time_offset
-        if self.previous_time < time_trigger + jump_hold <= self.current_time:
-            # Somewhat end of the jump
-            self.controls.jump = True
-        if time_trigger < self.previous_time <= time_trigger + jump_hold:
-            # Middle of the jump
-            self.controls.jump = True
-        if self.previous_time > time_trigger + jump_hold:
-            # End of the jump
-            self.controls.jump = False
+        self.action_controller.create(time_trigger, jump_hold, jump)
 
     def predict_jump(self, start_time, hold_time):
         start_tick = start_time * 120 + 1
