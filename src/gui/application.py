@@ -7,6 +7,23 @@ import multiprocessing
 from gui.graph import Graph
 
 
+def has_game_focus():
+    '''Checks whether Rocket League has window focus.'''
+    import platform
+    if platform.system() not in 'Windows':
+        return True
+    try:
+        import pygetwindow
+    except ModuleNotFoundError as e:
+        print('Error can be ignored:', e)
+        return True
+    # When the game title is empty
+    # the game might be in full screen
+    # so return true in that case.
+    window = pygetwindow.getActiveWindow()
+    return window.title in '' or 'Rocket League' in window.title
+
+
 class AppRunnable:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,6 +38,8 @@ class AppRunnable:
             if thread.name == 'Tkinter' and thread is not self:
                 thread.join()
         app = Application(self.stop_event, self.queue_in)
+        if has_game_focus() is True:
+            app.wm_iconify()
         app.mainloop()
         app.quit()
 
