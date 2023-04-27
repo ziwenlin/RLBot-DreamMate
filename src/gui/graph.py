@@ -5,6 +5,7 @@ from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from typing import Dict
 
 
 class Graph(tk.Frame):
@@ -23,7 +24,7 @@ class Graph(tk.Frame):
         self.toolbar.update()
         self.toolbar.pack_configure(fill='x', side='top')
 
-        self.lines: dict[str, Line2D] = {}
+        self.lines: Dict[str, Line2D] = {}
         self.plot: Axes = self.figure.add_subplot()
 
     def draw(self):
@@ -53,8 +54,10 @@ class Graph(tk.Frame):
         line = self.lines[key]
         data_y = line.get_ydata()
         data_x = line.get_xdata()
-        self.plot.set_xlim(min(data_x) - 1, max(data_x) + 1)
-        self.plot.set_ylim(min(data_y) - 1, max(data_y) + 1)
+        offset_x = (max(data_x) - min(data_x)) * 0.05 + 1
+        offset_y = (max(data_y) - min(data_y)) * 0.05 + 1
+        self.plot.set_xlim(min(data_x) - offset_x, max(data_x) + offset_x)
+        self.plot.set_ylim(min(data_y) - offset_y, max(data_y) + offset_y)
 
     def size_line(self, key, size):
         line = self.lines[key]
