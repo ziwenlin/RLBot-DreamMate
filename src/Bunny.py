@@ -12,7 +12,7 @@ class BunnyHop(BaseAgent):
     def __init__(self, name, index, team):
         super().__init__(name, index, team)
         self.controls = SimpleControllerState()
-        self.action_controller = TimedActionController(0)
+        self.action_controller = TimedActionController()
 
         self.current_time = 0
         self.previous_time = 0

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
@@ -23,13 +23,13 @@ class TimedAction:
 
 
 class TimedActionController:
-    def __init__(self, current_time):
-        self.start_time = current_time
-        self.current_time = current_time
-        self.previous_time = current_time
+    def __init__(self):
+        self.start_time = 0.0
+        self.current_time = 0.0
+        self.previous_time = 0.0
         self.tick = -120
-        self.actions: list[TimedAction] = []
-        self.current_action = TimedAction(0, 0, lambda: None)
+        self.actions: List[TimedAction] = []
+        self.current_action = TimedAction(0, 0, lambda _: None)
 
     def step(self, packet: GameTickPacket):
         time_elapsed = packet.game_info.seconds_elapsed
