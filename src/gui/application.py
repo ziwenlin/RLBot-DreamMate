@@ -15,13 +15,29 @@ def has_game_focus():
     try:
         import pygetwindow
     except ModuleNotFoundError as e:
-        print('Error can be ignored:', e)
+        print('Error (can be ignored):', e)
         return True
     # When the game title is empty
     # the game might be in full screen
     # so return true in that case.
     window = pygetwindow.getActiveWindow()
     return window.title in '' or 'Rocket League' in window.title
+
+
+def has_tkinter_focus():
+    '''Checks whether tkinter has window focus.'''
+    import platform
+    if platform.system() not in 'Windows':
+        return True
+    try:
+        import pygetwindow
+    except ModuleNotFoundError as e:
+        print('Error (can be ignored):', e)
+        return True
+    # Tkinter has window focus
+    # Choosing cmd here because it is easier to select
+    window = pygetwindow.getActiveWindow()
+    return 'cmd.exe' in window.title  # or 'DreamMate' in window.title
 
 
 class AppRunnable:
@@ -40,6 +56,9 @@ class AppRunnable:
         app = Application(self.stop_event, self.queue_in)
         if has_game_focus() is True:
             app.wm_iconify()
+        elif has_tkinter_focus() is True:
+            app.wm_iconify()
+            app.after(1000, app.wm_deiconify)
         app.mainloop()
         app.quit()
 
