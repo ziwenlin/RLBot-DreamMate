@@ -18,8 +18,8 @@ class SprintingCheetah(BaseAgent):
         self.controls = SimpleControllerState()
         self.action_controller = TimedActionController()
 
-        self.pid_speed = PIDController(0.042, 0.000018, -0.007)
-        self.pid_boost = PIDController(0.052, 0.000006, 0.001)
+        self.pid_speed = PIDController(0.042, 0.000101, -0.007)
+        self.pid_boost = PIDController(0.052, 0.000006, -0.001)
         self.previous_velocity = 0
 
     def initialize_agent(self):
@@ -44,8 +44,18 @@ class SprintingCheetah(BaseAgent):
 
         self.timed_drive(0, 4, 2000, 1)
         self.timed_drive(10, 4, 1000, 1)
-        self.timed_drive(20, 2.5, 2000, 0)
+        self.timed_drive(20, 4, 2000, 0)
         self.timed_drive(30, 4, 1000, 0)
+
+        # self.timed_drive(0, 4, 2220, 0.5)
+        # self.timed_drive(10, 4, 2250, 0.5)
+        # self.timed_drive(20, 4, 2280, 0.5)
+        # self.timed_drive(30, 4, 2300, 0.5)
+
+        # self.timed_drive(0, 4, 1400, 0.5)
+        # self.timed_drive(10, 4, 1500, 0.5)
+        # self.timed_drive(20, 4, 1800, 0.5)
+        # self.timed_drive(30, 4, 2000, 0.5)
 
     def retire(self):
         self.gui_thread.stop()
@@ -71,13 +81,7 @@ class SprintingCheetah(BaseAgent):
         self.action_controller.step(packet)
 
         # Teleports/wraps the agent car back to the opposite site of the field
-        if packet.game_cars[self.index].physics.location.y > 2000:
-            game_state = GameState(cars={
-                0: CarState(Physics(
-                    location=Vector3(1000, -2000, 0)
-                ))
-            })
-            self.set_game_state(game_state)
+        self.field_boundaries_check_control(packet)
 
         # Getting target directions
         target_position = Vec3(10, 100, 20)
@@ -85,7 +89,7 @@ class SprintingCheetah(BaseAgent):
         target_direction = target_velocity.normalized()
 
         # Rendering target and direction
-        self.renderer.begin_rendering()
+        self.renderer.begin_rendering('ball')
         self.renderer.draw_rect_3d(target_position, 10, 10, True, self.renderer.red(), True)
         self.renderer.draw_line_3d(target_position, target_position + target_direction * 250, self.renderer.red())
         self.renderer.end_rendering()
@@ -96,6 +100,27 @@ class SprintingCheetah(BaseAgent):
         self.plot_data(packet, 0, 40)
 
         return self.controls
+
+    def field_boundaries_check_control(self, packet):
+        location = packet.game_cars[self.index].physics.location
+        if abs(location.y) > 4500:
+            self.renderer.draw_string_2d(
+                10, 10, 10, 10,
+                f'{location.y}', self.renderer.red()
+            )
+            game_state = GameState(cars={
+                self.index: CarState(Physics(
+                    location=Vector3(location.x, -location.y * 0.99, 0)
+                ))
+            })
+            self.set_game_state(game_state)
+        elif abs(location.x) > 3200:
+            game_state = GameState(cars={
+                self.index: CarState(Physics(
+                    location=Vector3(-location.x * 0.99, location.y, 0)
+                ))
+            })
+            self.set_game_state(game_state)
 
     def timed_drive(self, start, hold, throttle, steer):
         def setup(_):
@@ -130,9 +155,9 @@ class SprintingCheetah(BaseAgent):
             velocity = Vec3(my_car.physics.velocity)
             speed = self.pid_speed.get_output(throttle, velocity.flat().length())
             speed *= abs(steer) * 0.75 + 0.25
-            # speed *= throttle / 2400
-            if speed < 0.015:
-                speed = 0.015
+            speed *= throttle / 1400
+            # if speed < 0.015:
+            #     speed = 0.015
             boost = self.pid_boost.get_output(throttle, velocity.flat().length())
 
             self.controls.throttle = util.drive.limit_to_safe_range(speed)
