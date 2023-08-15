@@ -1,7 +1,7 @@
 import random
 from typing import Dict, List, Tuple
 
-GENE = Tuple[float]
+GENE = Tuple[float, ...]
 GENETICS = Dict[str, GENE]
 
 
@@ -105,7 +105,23 @@ class Survival:
         self.entities_alive: List[Entity] = []
 
     def generate(self):
-        group_keys = ['health', 'strength', 'speed', 'intelligence']
+        for x in range(100):
+            genetics = generate_genetics({
+                'health': (0, 0),
+                'strength': (0, 0, 0, 0),
+                'speed': (0, 0, 0),
+                'intelligence': (0, 0, 0, 0, 0)
+            })
+            entity = Entity(f'Entity{x}', 0, genetics)
+            self.entities_alive.append(entity)
 
     def survive(self):
         pass
+
+
+def generate_genetics(genetics):
+    templates: GENETICS = {
+        group: tuple(random.random() - 0.5 for _ in range(len(gene)))
+        for group, gene in genetics.items()
+    }
+    return Genetics(templates, templates)
