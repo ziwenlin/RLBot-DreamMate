@@ -116,7 +116,9 @@ class Survival:
             self.entities_alive.append(entity)
 
     def survive(self):
-        pass
+        for entity in self.entities_alive:
+            points = grade_entity(entity)
+            pass
 
 
 def generate_genetics(genetics):
@@ -125,3 +127,46 @@ def generate_genetics(genetics):
         for group, gene in genetics.items()
     }
     return Genetics(templates, templates)
+
+
+def grade_entity(entity):
+    points = 0
+    genetics = entity.genetics.get_genetics()
+    health, resistance = genetics['health']
+    strength, durability, block, weight = genetics['strength']
+    speed, agility = genetics['speed']
+    intelligence, courage, creativity, skill, prediction = genetics['intelligence']
+
+    points += grade_multiplication(health, strength)
+    points += grade_multiplication(health, durability)
+    points += grade_multiplication(health, weight)
+
+    points += grade_opposed(strength, weight)
+    points += grade_opposed(courage, weight)
+    points += grade_opposed(block, weight)
+
+    points += grade_multiplication(speed, agility)
+    points += grade_opposed(speed, weight)
+    points += grade_opposed(agility, weight)
+
+    points += grade_multiplication(prediction, speed)
+    points += grade_multiplication(prediction, intelligence)
+    points += grade_multiplication(skill, agility)
+    points += grade_multiplication(skill, creativity)
+    points += grade_multiplication(skill, block)
+    points += grade_opposed(creativity, resistance)
+    points += grade_opposed(intelligence, strength)
+
+    return points
+
+
+def grade_opposed(positive, negative):
+    if positive - negative == 0:
+        return 0
+    return positive / (positive - negative)
+
+
+def grade_multiplication(positive, multiplication):
+    if positive + multiplication == 0:
+        return 0
+    return positive * multiplication / (positive + multiplication)
