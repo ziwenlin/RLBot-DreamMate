@@ -129,7 +129,8 @@ class Survival:
         self.survivors_log: Dict[Entity, Status] = {}
         self.survivors: Dict[Entity, Status] = {}
 
-        self.population = 100
+        self.population_max = 100
+        self.log_count = 0
         self.year = 0
         self.free = None
 
@@ -141,8 +142,9 @@ class Survival:
                 'speed': (0, 0, 0),
                 'intelligence': (0, 0, 0, 0, 0)
             })
-            entity = Entity(f'Entity{x}', self.year, genetics)
+            entity = Entity(f'Entity{self.log_count}', self.year, genetics)
             self.survivors[entity] = Status()
+            self.log_count += 1
 
     def survive(self):
         grades = grade_survivors(self.survivors)
@@ -163,8 +165,8 @@ class Survival:
                 self.survivor_match(survivor)
 
         amount_alive = len(self.survivors)
-        if amount_alive <= self.population:
-            amount_missing = self.population - amount_alive
+        if amount_alive <= self.population_max:
+            amount_missing = self.population_max - amount_alive
             self.generate(amount_missing)
 
         self.year += 1
@@ -172,10 +174,10 @@ class Survival:
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
             return
-        x = len(self.survivors_log) + self.population
-        child = family.create_child(f'Child{x}', self.year)
+        child = family.create_child(f'Child{self.log_count}', self.year)
         self.survivors[child] = Status()
         self.survivors[child].child_family = family
+        self.log_count += 1
 
     def survivor_fallen(self, survivor: Entity):
         status = self.survivors.pop(survivor)
