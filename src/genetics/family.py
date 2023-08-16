@@ -149,6 +149,17 @@ class Status:
         return self.has_active_family(year) is False
 
 
+class Record:
+    def __init__(self, entity: Entity):
+        self.entity = entity
+        self.points = 0.0
+        self.vitality = 0.0
+        self.alive = True
+
+    def set_score(self, score: float):
+        self.points = score
+
+
 class Survival:
     def __init__(self, population_max=100):
         self.survivors_log: Dict[Entity, Status] = {}
@@ -159,6 +170,9 @@ class Survival:
         self.population_current = 0
         self.log_count = 0
         self.year = 0
+
+    def get_records(self):
+        return list(Record(survivor) for survivor in self.survivors)
 
     def generate(self):
         amount = self.population_max - self.population_current
@@ -254,6 +268,20 @@ class Survival:
         survivor = max(self.looking_for_mate, key=lambda partner: self.survivors[partner].high_score)
         self.looking_for_mate.remove(survivor)
         return survivor
+
+    def grade_records(self, grades: List[Record]):
+        def filter_score(stats: Record):
+            return stats.points
+
+        minimum = min(grades, key=filter_score).points
+        average = sum(list(stats.points for stats in grades)) / len(grades)
+        average_range = average - minimum
+        for stats in grades:
+            points = stats.points
+            stats.vitality = (points - minimum) / average_range
+            stats.alive = stats.vitality > random.random()
+        self.survivor_records = grades
+        return grades
 
 
 def grade_survivors(survivors):
