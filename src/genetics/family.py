@@ -93,8 +93,20 @@ class Family:
     def is_child(self, entity: Entity):
         return entity in self.children
 
-    def is_parent_alive(self, year):
+    def is_reproducable(self, year):
         return self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
+
+    def is_parent_alive(self, year):
+        return self.parent_a.is_alive(year) or self.parent_b.is_alive(year)
+
+    def is_children_alive(self, year):
+        for child in self.children:
+            if child.is_alive(year):
+                return True
+        return False
+
+    def is_family_alive(self, year):
+        return self.is_parent_alive(year) or self.is_children_alive(year)
 
 
 class Survival:
