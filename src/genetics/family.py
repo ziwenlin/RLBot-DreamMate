@@ -115,6 +115,7 @@ class Survival:
         self.families_alive: List[Family] = []
         self.entities_fallen: List[Entity] = []
         self.entities_alive: List[Entity] = []
+        self.entities: Dict[Entity, dict] = {}
 
     def generate(self):
         for x in range(100):
@@ -128,9 +129,27 @@ class Survival:
             self.entities_alive.append(entity)
 
     def survive(self):
+        grades = self.grade()
+        for stats in grades:
+            entity = stats['entity']
+
+    def grade(self):
+        grades: List[dict] = []
         for entity in self.entities_alive:
             points = grade_entity(entity)
-            pass
+            statistics = {
+                'entity': entity,
+                'points': points,
+            }
+            grades.append(statistics)
+        grades.sort(reverse=True, key=lambda stats: stats['points'])
+        minimum = grades[-1]['points']
+        maximum = grades[0]['points']
+        point_range = maximum - minimum
+        for stats in grades:
+            points = stats['points']
+            stats['grade'] = (points - minimum) / point_range
+        return grades
 
 
 def generate_genetics(genetics):
