@@ -160,9 +160,8 @@ def grade_survivors(survivors):
             'points': points,
         }
         grades.append(statistics)
-    grades.sort(reverse=True, key=lambda stats: stats['points'])
-    minimum = grades[-1]['points']
-    maximum = grades[0]['points']
+    minimum = min(grades, key=lambda stats: stats['points'])['points']
+    maximum = max(grades, key=lambda stats: stats['points'])['points']
     point_range = maximum - minimum
     for stats in grades:
         points = stats['points']
