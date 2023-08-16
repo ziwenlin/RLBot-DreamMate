@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 GENE = Tuple[float, ...]
 GENETICS = Dict[str, GENE]
@@ -120,13 +120,32 @@ class Family:
         return False
 
     def is_family_alive(self, year):
-        return self.is_parent_alive(year) or self.is_children_alive(year)
+        return self.is_partner_alive(year) or self.is_children_alive(year)
 
 
 class Status:
     def __init__(self):
-        self.parent_family: Family = None
-        self.child_family: Family = None
+        self.families: List[Family] = []
+        self.origin: Optional[Family] = None
+        self.current_family: Optional[Family] = None
+
+    def register_origin(self, family: Family):
+        self.origin = family
+
+    def register_family(self, family: Family):
+        self.families.append(family)
+        self.current_family = family
+
+    def has_active_family(self, year):
+        if self.current_family is None:
+            return False
+        if self.current_family.is_family_alive(year) is True:
+            return True
+        self.current_family = None
+        return False
+
+    def is_looking_for_mate(self, year):
+        return self.has_active_family(year) is False
 
 
 class Survival:
@@ -165,7 +184,7 @@ class Survival:
             return (self.population_current, amount_alive, amount_missing, 0, 0)
         amount_born = 0
         for survivor in list(self.survivors):
-            family = self.survivors[survivor].parent_family
+            family = self.survivors[survivor].current_family
             if family is None:
                 continue
             self.survivor_born(family)
@@ -186,6 +205,7 @@ class Survival:
 
         for survivor in self.survivors:
             survivor.grow_up()
+            self.survivor_matching(survivor)
         self.survivor_pairing()
 
         self.year += 1
@@ -205,6 +225,17 @@ class Survival:
         if survivor in self.looking_for_mate:
             self.looking_for_mate.remove(survivor)
 
+    def survivor_matching(self, survivor: Entity):
+        if survivor in self.looking_for_mate:
+            return True
+        if survivor.age < 5:
+            return False
+        status = self.survivors[survivor]
+        if status.is_looking_for_mate(self.year) is False:
+            return False
+        self.looking_for_mate.append(survivor)
+        return True
+
     def survivor_pairing(self):
         amount_potential_mates = len(self.looking_for_mate)
         if amount_potential_mates < 2:
@@ -214,8 +245,8 @@ class Survival:
             partner_a = self.looking_for_mate.pop(0)
             partner_b = self.looking_for_mate.pop(0)
             family = Family(partner_a, partner_b)
-            self.survivors[partner_a].parent_family = family
-            self.survivors[partner_b].parent_family = family
+            self.survivors[partner_a].register_family(family)
+            self.survivors[partner_b].register_family(family)
 
 
 def grade_survivors(survivors):
