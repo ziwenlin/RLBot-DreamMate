@@ -32,7 +32,7 @@ class Genetics:
 
     def get_genetics_copy(self):
         group_keys = self.genetics_a.keys()
-        group_choice = {group: random.Random() for group in group_keys}
+        group_choice = {group: random.random() for group in group_keys}
         genetics: GENETICS = {
             group: self.get_gene_copy(group, choice)
             for group, choice in group_choice.items()
@@ -71,6 +71,9 @@ class Entity:
 
     def is_alive(self, year):
         return self.year + self.age == year
+
+    def __repr__(self):
+        return f'{self.name} Year:{self.year} Age:{self.age}'
 
 
 class Family:
@@ -214,10 +217,13 @@ def grade_survivors(survivors):
     minimum = min(grades, key=lambda stats: stats['points'])['points']
     maximum = max(grades, key=lambda stats: stats['points'])['points']
     point_range = maximum - minimum
+    average = sum(list(grade['points'] for grade in grades)) / len(grades)
+    average_range = average - minimum
     for stats in grades:
         points = stats['points']
         stats['grade'] = (points - minimum) / point_range
-        stats['survive'] = random.random() < stats['grade']
+        stats['score'] = (points - minimum) / average_range / 2
+        stats['survive'] = random.random() < stats['score']
     return grades
 
 
@@ -234,7 +240,7 @@ def grade_entity(entity):
     genetics = entity.genetics.get_genetics()
     health, resistance = genetics['health']
     strength, durability, block, weight = genetics['strength']
-    speed, agility = genetics['speed']
+    speed, agility, endurance = genetics['speed']
     intelligence, courage, creativity, skill, prediction = genetics['intelligence']
 
     points += grade_multiplication(health, strength)
