@@ -93,7 +93,7 @@ class Family:
     def is_child(self, entity: Entity):
         return entity in self.children
 
-    def is_reproducable(self, year):
+    def is_reproducible(self, year):
         return self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
 
     def is_parent_alive(self, year):
@@ -109,13 +109,19 @@ class Family:
         return self.is_parent_alive(year) or self.is_children_alive(year)
 
 
+class Status:
+    def __init__(self):
+        self.parent: Family = None
+        self.child: Family = None
+
+
 class Survival:
     def __init__(self):
-        self.families_fallen: List[Family] = []
-        self.families_alive: List[Family] = []
-        self.entities_fallen: List[Entity] = []
-        self.entities_alive: List[Entity] = []
-        self.entities: Dict[Entity, dict] = {}
+        self.survivors_log: Dict[Entity, Status] = {}
+        self.survivors: Dict[Entity, Status] = {}
+
+        self.year = 0
+        self.free = None
 
     def generate(self):
         for x in range(100):
@@ -125,17 +131,25 @@ class Survival:
                 'speed': (0, 0, 0),
                 'intelligence': (0, 0, 0, 0, 0)
             })
-            entity = Entity(f'Entity{x}', 0, genetics)
-            self.entities_alive.append(entity)
+            entity = Entity(f'Entity{x}', self.year, genetics)
+            self.survivors[entity] = Status()
 
     def survive(self):
         grades = self.grade()
         for stats in grades:
             entity = stats['entity']
 
+        for survivor, status in self.survivors.items():
+            survivor.grow_up()
+        self.year += 1
+
+    def survivor_fallen(self, survivor: Entity):
+        status = self.survivors.pop(survivor)
+        self.survivors_log[survivor] = status
+
     def grade(self):
         grades: List[dict] = []
-        for entity in self.entities_alive:
+        for entity in self.survivors:
             points = grade_entity(entity)
             statistics = {
                 'entity': entity,
@@ -149,6 +163,7 @@ class Survival:
         for stats in grades:
             points = stats['points']
             stats['grade'] = (points - minimum) / point_range
+            stats['survive'] = random.random() < stats['grade']
         return grades
 
 
