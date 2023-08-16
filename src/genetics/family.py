@@ -87,6 +87,9 @@ class Family:
         self.children.append(child)
         return child
 
+    def get_children_alive(self, year):
+        return [child for child in self.children if child.is_alive(year)]
+
     def is_parent(self, entity: Entity):
         return self.parent_a is entity or self.parent_b is entity
 
@@ -94,7 +97,13 @@ class Family:
         return entity in self.children
 
     def is_reproducible(self, year):
-        return self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
+        if len(self.children) > 0:
+            youngest_child = self.children[-1]
+            has_newborn = youngest_child.age == 0
+        else:
+            has_newborn = False
+        return (self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
+                and not has_newborn)
 
     def is_parent_alive(self, year):
         return self.parent_a.is_alive(year) or self.parent_b.is_alive(year)
@@ -111,8 +120,8 @@ class Family:
 
 class Status:
     def __init__(self):
-        self.parent: Family = None
-        self.child: Family = None
+        self.parent_family: Family = None
+        self.child_family: Family = None
 
 
 class Survival:
@@ -120,6 +129,7 @@ class Survival:
         self.survivors_log: Dict[Entity, Status] = {}
         self.survivors: Dict[Entity, Status] = {}
 
+        self.population = 100
         self.year = 0
         self.free = None
 
@@ -144,11 +154,44 @@ class Survival:
 
         for survivor, status in self.survivors.items():
             survivor.grow_up()
+
+        for survivor, status in self.survivors.items():
+            family = status.parent_family
+            if family is not None:
+                self.survivor_born(family)
+            if survivor.year > 5 and family is None:
+                self.survivor_match(survivor)
+
+        amount_alive = len(self.survivors)
+        if amount_alive <= self.population:
+            amount_missing = self.population - amount_alive
+            self.generate(amount_missing)
+
         self.year += 1
+
+    def survivor_born(self, family: Family):
+        if family.is_reproducible(self.year) is False:
+            return
+        x = len(self.survivors_log) + self.population
+        child = family.create_child(f'Child{x}', self.year)
+        self.survivors[child] = Status()
+        self.survivors[child].child_family = family
 
     def survivor_fallen(self, survivor: Entity):
         status = self.survivors.pop(survivor)
         self.survivors_log[survivor] = status
+
+    def survivor_match(self, survivor):
+        if self.free is None:
+            self.free = survivor
+            return
+        partner = self.free
+        if partner is survivor:
+            return
+        family = Family(partner, survivor)
+        self.survivors[partner].parent_family = family
+        self.survivors[survivor].parent_family = family
+        self.free = None
 
 
 def grade_survivors(survivors):
