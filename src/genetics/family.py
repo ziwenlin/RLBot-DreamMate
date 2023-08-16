@@ -123,6 +123,25 @@ class Family:
         return self.is_partner_alive(year) or self.is_children_alive(year)
 
 
+class Survivor:
+    def __init__(self, entity: Entity):
+        self.entity = entity
+        self.points = 0.0
+        self.score = 0.0
+        self.vitality = 0.0
+        self.alive = True
+
+    def set_score(self, score: float):
+        self.points = score
+
+    def __str__(self):
+        return f'entity: {self.entity},\t' \
+               f'points: {self.points:.2f},\t' \
+               f'score: {self.score:.2f},\t' \
+               f'vitality: {self.vitality:.2f}\t' \
+               f'alive: {self.alive}'
+
+
 class Status:
     def __init__(self):
         self.families: List[Family] = []
@@ -149,17 +168,6 @@ class Status:
         return self.has_active_family(year) is False
 
 
-class Record:
-    def __init__(self, entity: Entity):
-        self.entity = entity
-        self.points = 0.0
-        self.vitality = 0.0
-        self.alive = True
-
-    def set_score(self, score: float):
-        self.points = score
-
-
 class Survival:
     def __init__(self, population_max=100):
         self.survivors_log: Dict[Entity, Status] = {}
@@ -172,7 +180,7 @@ class Survival:
         self.year = 0
 
     def get_records(self):
-        return list(Record(survivor) for survivor in self.survivors)
+        return list(Survivor(survivor) for survivor in self.survivors)
 
     def generate(self):
         amount = self.population_max - self.population_current
@@ -269,8 +277,8 @@ class Survival:
         self.looking_for_mate.remove(survivor)
         return survivor
 
-    def grade_records(self, grades: List[Record]):
-        def filter_score(stats: Record):
+    def grade_records(self, grades: List[Survivor]):
+        def filter_score(stats: Survivor):
             return stats.points
 
         minimum = min(grades, key=filter_score).points
