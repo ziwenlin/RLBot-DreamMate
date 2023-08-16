@@ -105,11 +105,13 @@ class Family:
             has_newborn = youngest_child.age == 0
         else:
             has_newborn = False
-        return (self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
-                and not has_newborn)
+        return self.is_partner_alive(year) and not has_newborn
 
     def is_parent_alive(self, year):
         return self.parent_a.is_alive(year) or self.parent_b.is_alive(year)
+
+    def is_partner_alive(self, year):
+        return self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
 
     def is_children_alive(self, year):
         for child in self.children:
@@ -131,11 +133,11 @@ class Survival:
     def __init__(self):
         self.survivors_log: Dict[Entity, Status] = {}
         self.survivors: Dict[Entity, Status] = {}
+        self.looking_for_mate: List[Entity] = []
 
         self.population_max = 100
         self.log_count = 0
         self.year = 0
-        self.free = None
 
     def generate(self, amount=100):
         for x in range(amount):
@@ -153,10 +155,9 @@ class Survival:
         amount_alive = len(self.survivors)
         for survivor in list(self.survivors):
             family = self.survivors[survivor].parent_family
-            if family is not None:
-                self.survivor_born(family)
-            if survivor.year > 5 and family is None:
-                self.survivor_match(survivor)
+            if family is None:
+                continue
+            self.survivor_born(family)
         amount_born = len(self.survivors) - amount_alive
         amount_missing = self.population_max - amount_alive
         if amount_missing > amount_born:
@@ -172,8 +173,9 @@ class Survival:
             entity = stats['entity']
             self.survivor_fallen(entity)
 
-        for survivor, status in self.survivors.items():
+        for survivor in self.survivors:
             survivor.grow_up()
+        self.survivor_pairing()
 
         self.year += 1
         return grades
@@ -189,20 +191,20 @@ class Survival:
     def survivor_fallen(self, survivor: Entity):
         status = self.survivors.pop(survivor)
         self.survivors_log[survivor] = status
-        if survivor is self.free:
-            self.free = None
+        if survivor in self.looking_for_mate:
+            self.looking_for_mate.remove(survivor)
 
-    def survivor_match(self, survivor):
-        if self.free is None:
-            self.free = survivor
+    def survivor_pairing(self):
+        amount_potential_mates = len(self.looking_for_mate)
+        if amount_potential_mates < 2:
             return
-        partner = self.free
-        if partner is survivor:
-            return
-        family = Family(partner, survivor)
-        self.survivors[partner].parent_family = family
-        self.survivors[survivor].parent_family = family
-        self.free = None
+        amount_potential_pairs = amount_potential_mates // 2
+        for _ in range(amount_potential_pairs):
+            partner_a = self.looking_for_mate.pop(0)
+            partner_b = self.looking_for_mate.pop(0)
+            family = Family(partner_a, partner_b)
+            self.survivors[partner_a].parent_family = family
+            self.survivors[partner_b].parent_family = family
 
 
 def grade_survivors(survivors):
