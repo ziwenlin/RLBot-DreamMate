@@ -123,8 +123,8 @@ class Survival:
         self.year = 0
         self.free = None
 
-    def generate(self):
-        for x in range(100):
+    def generate(self, amount=100):
+        for x in range(amount):
             genetics = generate_genetics({
                 'health': (0, 0),
                 'strength': (0, 0, 0, 0),
@@ -135,9 +135,12 @@ class Survival:
             self.survivors[entity] = Status()
 
     def survive(self):
-        grades = self.grade()
+        grades = grade_survivors(self.survivors)
         for stats in grades:
+            if stats['survive'] is True:
+                continue
             entity = stats['entity']
+            self.survivor_fallen(entity)
 
         for survivor, status in self.survivors.items():
             survivor.grow_up()
@@ -147,24 +150,25 @@ class Survival:
         status = self.survivors.pop(survivor)
         self.survivors_log[survivor] = status
 
-    def grade(self):
-        grades: List[dict] = []
-        for entity in self.survivors:
-            points = grade_entity(entity)
-            statistics = {
-                'entity': entity,
-                'points': points,
-            }
-            grades.append(statistics)
-        grades.sort(reverse=True, key=lambda stats: stats['points'])
-        minimum = grades[-1]['points']
-        maximum = grades[0]['points']
-        point_range = maximum - minimum
-        for stats in grades:
-            points = stats['points']
-            stats['grade'] = (points - minimum) / point_range
-            stats['survive'] = random.random() < stats['grade']
-        return grades
+
+def grade_survivors(survivors):
+    grades: List[dict] = []
+    for entity in survivors:
+        points = grade_entity(entity)
+        statistics = {
+            'entity': entity,
+            'points': points,
+        }
+        grades.append(statistics)
+    grades.sort(reverse=True, key=lambda stats: stats['points'])
+    minimum = grades[-1]['points']
+    maximum = grades[0]['points']
+    point_range = maximum - minimum
+    for stats in grades:
+        points = stats['points']
+        stats['grade'] = (points - minimum) / point_range
+        stats['survive'] = random.random() < stats['grade']
+    return grades
 
 
 def generate_genetics(genetics):
