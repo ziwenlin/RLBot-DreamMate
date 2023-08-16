@@ -130,16 +130,20 @@ class Status:
 
 
 class Survival:
-    def __init__(self):
+    def __init__(self, population_max=100):
         self.survivors_log: Dict[Entity, Status] = {}
         self.survivors: Dict[Entity, Status] = {}
         self.looking_for_mate: List[Entity] = []
 
-        self.population_max = 100
+        self.population_max = population_max
+        self.population_current = 0
         self.log_count = 0
         self.year = 0
 
-    def generate(self, amount=100):
+    def generate(self):
+        amount = self.population_max - self.population_current
+        if amount < 0:
+            return 0
         for x in range(amount):
             genetics = generate_genetics({
                 'health': (0, 0),
@@ -150,20 +154,27 @@ class Survival:
             entity = Entity(f'Entity{self.log_count}', self.year, genetics)
             self.survivors[entity] = Status()
             self.log_count += 1
+        self.population_current += amount
+        return amount
 
     def reproduce(self):
         amount_alive = len(self.survivors)
+        amount_missing = self.population_current - amount_alive
+        self.population_current += -amount_missing
+        if self.population_max < amount_alive:
+            return (self.population_current, amount_alive, amount_missing, 0, 0)
+        amount_born = 0
         for survivor in list(self.survivors):
             family = self.survivors[survivor].parent_family
             if family is None:
                 continue
             self.survivor_born(family)
-        amount_born = len(self.survivors) - amount_alive
-        amount_missing = self.population_max - amount_alive
-        if amount_missing > amount_born:
-            self.generate(amount_missing - amount_born)
+            amount_born += 1
+        self.population_current += amount_born
+        amount_generated = self.generate()
 
-        return amount_alive, amount_missing, amount_born
+        return (self.population_current, amount_alive, amount_missing,
+                amount_born, amount_generated,)
 
     def survive(self):
         grades = grade_survivors(self.survivors)
@@ -185,7 +196,7 @@ class Survival:
             return
         child = family.create_child(f'Child{self.log_count}', self.year)
         self.survivors[child] = Status()
-        self.survivors[child].child_family = family
+        self.survivors[child].register_origin(family)
         self.log_count += 1
 
     def survivor_fallen(self, survivor: Entity):
@@ -224,7 +235,7 @@ def grade_survivors(survivors):
     for stats in grades:
         points = stats['points']
         stats['grade'] = (points - minimum) / point_range
-        stats['score'] = (points - minimum) / average_range / 2
+        stats['score'] = (points - minimum) / average_range
         stats['survive'] = random.random() < stats['score']
     return grades
 
