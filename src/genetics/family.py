@@ -146,6 +146,21 @@ class Survival:
             self.survivors[entity] = Status()
             self.log_count += 1
 
+    def reproduce(self):
+        amount_alive = len(self.survivors)
+        for survivor in list(self.survivors):
+            family = self.survivors[survivor].parent_family
+            if family is not None:
+                self.survivor_born(family)
+            if survivor.year > 5 and family is None:
+                self.survivor_match(survivor)
+        amount_born = len(self.survivors) - amount_alive
+        amount_missing = self.population_max - amount_alive
+        if amount_missing > amount_born:
+            self.generate(amount_missing - amount_born)
+
+        return amount_alive, amount_missing, amount_born
+
     def survive(self):
         grades = grade_survivors(self.survivors)
         for stats in grades:
@@ -157,19 +172,8 @@ class Survival:
         for survivor, status in self.survivors.items():
             survivor.grow_up()
 
-        for survivor, status in self.survivors.items():
-            family = status.parent_family
-            if family is not None:
-                self.survivor_born(family)
-            if survivor.year > 5 and family is None:
-                self.survivor_match(survivor)
-
-        amount_alive = len(self.survivors)
-        if amount_alive <= self.population_max:
-            amount_missing = self.population_max - amount_alive
-            self.generate(amount_missing)
-
         self.year += 1
+        return grades
 
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
@@ -182,6 +186,8 @@ class Survival:
     def survivor_fallen(self, survivor: Entity):
         status = self.survivors.pop(survivor)
         self.survivors_log[survivor] = status
+        if survivor is self.free:
+            self.free = None
 
     def survivor_match(self, survivor):
         if self.free is None:
