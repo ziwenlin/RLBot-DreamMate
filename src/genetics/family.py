@@ -128,6 +128,7 @@ class Status:
         self.families: List[Family] = []
         self.origin: Optional[Family] = None
         self.current_family: Optional[Family] = None
+        self.high_score = 0
 
     def register_origin(self, family: Family):
         self.origin = family
@@ -198,9 +199,10 @@ class Survival:
     def survive(self):
         grades = grade_survivors(self.survivors)
         for stats in grades:
-            if stats['survive'] is True:
-                continue
             entity = stats['entity']
+            if stats['survive'] is True:
+                self.survivors[entity].high_score = stats['grade']
+                continue
             self.survivor_fallen(entity)
 
         for survivor in self.survivors:
@@ -242,11 +244,16 @@ class Survival:
             return
         amount_potential_pairs = amount_potential_mates // 2
         for _ in range(amount_potential_pairs):
-            partner_a = self.looking_for_mate.pop(0)
-            partner_b = self.looking_for_mate.pop(0)
+            partner_a = self.select_best_mate()
+            partner_b = self.select_best_mate()
             family = Family(partner_a, partner_b)
             self.survivors[partner_a].register_family(family)
             self.survivors[partner_b].register_family(family)
+
+    def select_best_mate(self):
+        survivor = max(self.looking_for_mate, key=lambda partner: self.survivors[partner].high_score)
+        self.looking_for_mate.remove(survivor)
+        return survivor
 
 
 def grade_survivors(survivors):
