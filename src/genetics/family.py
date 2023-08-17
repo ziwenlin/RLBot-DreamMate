@@ -61,8 +61,8 @@ class Genetics:
 
 class Entity:
     def __init__(self, name, year, genetics: Genetics):
-        self.year = year
         self.name = name
+        self.year = year
         self.age = 0
         self.genetics = genetics
 
@@ -73,7 +73,7 @@ class Entity:
         return self.year + self.age == year
 
     def __repr__(self):
-        return f'{self.name} Year:{self.year} Age:{self.age}'
+        return str({k: v for k, v in self.__dict__.items() if v is not self.genetics})
 
 
 class Family:
@@ -141,11 +141,8 @@ class Survivor:
         self.score = score
 
     def __repr__(self):
-        return f'entity: {self.entity},\t' \
-               f'points: {self.points:.2f},\t' \
-               f'score: {self.score:.2f},\t' \
-               f'vitality: {self.vitality:.2f}\t' \
-               f'alive: {self.alive}'
+        return str({k: round(v, 2) if type(v) is float else v
+                    for k, v in self.__dict__.items()})
 
 
 class Archive:
@@ -200,7 +197,7 @@ class Survival:
                 'speed': (0, 0, 0),
                 'intelligence': (0, 0, 0, 0, 0)
             })
-            entity = Entity(f'Entity{self.log_count}', self.year, genetics)
+            entity = Entity(f'Entity {self.log_count}', self.year, genetics)
             self.survivor_record(entity)
         self.population_current += amount
         return amount
@@ -249,7 +246,7 @@ class Survival:
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
             return
-        child = family.create_child(f'Child{self.log_count}', self.year)
+        child = family.create_child(f'Child {self.log_count}', self.year)
         self.survivor_record(child, family)
 
     def survivor_fallen(self, survivor: Survivor):
