@@ -178,6 +178,7 @@ class Survival:
     def __init__(self, population_max=100):
         self.survivors_log: Dict[Survivor, Archive] = {}
         self.survivors: Dict[Survivor, Archive] = {}
+        self.entity_log: Dict[Entity, Survivor] = {}
         self.looking_for_mate: List[Survivor] = []
 
         self.population_max = population_max
@@ -238,6 +239,7 @@ class Survival:
 
     def survivor_record(self, entity: Entity, family: Optional[Family] = None):
         survivor = Survivor(entity)
+        self.entity_log[entity] = survivor
         self.survivors[survivor] = archive = Archive(survivor)
         if family is None:
             return
