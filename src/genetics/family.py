@@ -277,19 +277,21 @@ class Survival:
         self.looking_for_mate.remove(survivor)
         return survivor
 
-    def grade_records(self, grades: List[Survivor]):
+    def evaluate(self, survivors: List[Survivor]):
         def filter_score(stats: Survivor):
             return stats.points
 
-        minimum = min(grades, key=filter_score).points
-        average = sum(list(stats.points for stats in grades)) / len(grades)
+        minimum = min(survivors, key=filter_score).points
+        maximum = max(survivors, key=filter_score).points
+        average = sum(list(stats.points for stats in survivors)) / len(survivors)
         average_range = average - minimum
-        for stats in grades:
+        middle_range = maximum - minimum
+        for stats in survivors:
             points = stats.points
+            stats.score = (points - minimum) / middle_range
             stats.vitality = (points - minimum) / average_range
             stats.alive = stats.vitality > random.random()
-        self.survivor_records = grades
-        return grades
+        return survivors
 
 
 def grade_survivors(survivors):
