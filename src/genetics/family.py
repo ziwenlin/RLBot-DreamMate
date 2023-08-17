@@ -140,7 +140,7 @@ class Survivor:
     def set_score(self, score: float):
         self.score = score
 
-    def __str__(self):
+    def __repr__(self):
         return f'entity: {self.entity},\t' \
                f'points: {self.points:.2f},\t' \
                f'score: {self.score:.2f},\t' \
@@ -241,10 +241,10 @@ class Survival:
         survivor = Survivor(entity)
         self.entity_log[entity] = survivor
         self.survivors[survivor] = archive = Archive(survivor)
+        self.log_count += 1
         if family is None:
             return
         archive.register_family(family)
-        self.log_count += 1
 
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
