@@ -170,17 +170,17 @@ class Status:
 
 class Survival:
     def __init__(self, population_max=100):
-        self.survivors_log: Dict[Entity, Status] = {}
-        self.survivors: Dict[Entity, Status] = {}
-        self.looking_for_mate: List[Entity] = []
+        self.survivors_log: Dict[Survivor, Status] = {}
+        self.survivors: Dict[Survivor, Status] = {}
+        self.looking_for_mate: List[Survivor] = []
 
         self.population_max = population_max
         self.population_current = 0
         self.log_count = 0
         self.year = 0
 
-    def get_records(self):
-        return list(Survivor(survivor) for survivor in self.survivors)
+    def get_survivors(self):
+        return list(self.survivors)
 
     def generate(self):
         amount = self.population_max - self.population_current
@@ -194,8 +194,7 @@ class Survival:
                 'intelligence': (0, 0, 0, 0, 0)
             })
             entity = Entity(f'Entity{self.log_count}', self.year, genetics)
-            self.survivors[entity] = Status()
-            self.log_count += 1
+            self.survivor_record(entity)
         self.population_current += amount
         return amount
 
@@ -231,24 +230,30 @@ class Survival:
         self.year += 1
         return survivors
 
+    def survivor_record(self, entity: Entity, family: Optional[Family] = None):
+        survivor = Survivor(entity)
+        self.survivors[survivor] = status = Status()
+        if family is None:
+            return
+        status.register_family(family)
+        self.log_count += 1
+
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
             return
         child = family.create_child(f'Child{self.log_count}', self.year)
-        self.survivors[child] = Status()
-        self.survivors[child].register_origin(family)
-        self.log_count += 1
+        self.survivor_record(child, family)
 
-    def survivor_fallen(self, survivor: Entity):
+    def survivor_fallen(self, survivor: Survivor):
         status = self.survivors.pop(survivor)
         self.survivors_log[survivor] = status
         if survivor in self.looking_for_mate:
             self.looking_for_mate.remove(survivor)
 
-    def survivor_matching(self, survivor: Entity):
+    def survivor_matching(self, survivor: Survivor):
         if survivor in self.looking_for_mate:
             return True
-        if survivor.age < 5:
+        if survivor.entity.age < 5:
             return False
         status = self.survivors[survivor]
         if status.is_looking_for_mate(self.year) is False:
@@ -264,12 +269,15 @@ class Survival:
         for _ in range(amount_potential_pairs):
             partner_a = self.select_best_mate()
             partner_b = self.select_best_mate()
-            family = Family(partner_a, partner_b)
+            family = Family(partner_a.entity, partner_b.entity)
             self.survivors[partner_a].register_family(family)
             self.survivors[partner_b].register_family(family)
 
     def select_best_mate(self):
-        survivor = max(self.looking_for_mate, key=lambda partner: self.survivors[partner].high_score)
+        def filter_score(stats: Survivor):
+            return stats.points
+
+        survivor = max(self.looking_for_mate, key=filter_score)
         self.looking_for_mate.remove(survivor)
         return survivor
 
