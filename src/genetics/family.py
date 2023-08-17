@@ -131,8 +131,14 @@ class Survivor:
         self.vitality = 0.0
         self.alive = True
 
+    def set_vitality(self, vitality: float):
+        self.vitality = vitality
+
+    def set_points(self, points: float):
+        self.points = points
+
     def set_score(self, score: float):
-        self.points = score
+        self.score = score
 
     def __str__(self):
         return f'entity: {self.entity},\t' \
@@ -292,9 +298,11 @@ class Survival:
         middle_range = maximum - minimum
         for stats in survivors:
             points = stats.points
-            stats.score = (points - minimum) / middle_range
-            stats.vitality = (points - minimum) / average_range
-            stats.alive = stats.vitality > random.random()
+            score = (points - minimum) / middle_range
+            vitality = (points - minimum) / average_range
+            stats.set_score(score)
+            stats.set_vitality(vitality)
+            stats.alive = vitality > random.random()
         return survivors
 
 
