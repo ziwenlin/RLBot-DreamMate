@@ -142,12 +142,12 @@ class Survivor:
                f'alive: {self.alive}'
 
 
-class Status:
-    def __init__(self):
+class Archive:
+    def __init__(self, survivor: Survivor):
+        self.survivor = survivor
         self.families: List[Family] = []
         self.origin: Optional[Family] = None
         self.current_family: Optional[Family] = None
-        self.high_score = 0
 
     def register_origin(self, family: Family):
         self.origin = family
@@ -170,8 +170,8 @@ class Status:
 
 class Survival:
     def __init__(self, population_max=100):
-        self.survivors_log: Dict[Survivor, Status] = {}
-        self.survivors: Dict[Survivor, Status] = {}
+        self.survivors_log: Dict[Survivor, Archive] = {}
+        self.survivors: Dict[Survivor, Archive] = {}
         self.looking_for_mate: List[Survivor] = []
 
         self.population_max = population_max
@@ -232,10 +232,10 @@ class Survival:
 
     def survivor_record(self, entity: Entity, family: Optional[Family] = None):
         survivor = Survivor(entity)
-        self.survivors[survivor] = status = Status()
+        self.survivors[survivor] = archive = Archive(survivor)
         if family is None:
             return
-        status.register_family(family)
+        archive.register_family(family)
         self.log_count += 1
 
     def survivor_born(self, family: Family):
