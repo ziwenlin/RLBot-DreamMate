@@ -219,21 +219,17 @@ class Survival:
                 amount_born, amount_generated,)
 
     def survive(self):
-        grades = grade_survivors(self.survivors)
-        for stats in grades:
-            entity = stats['entity']
-            if stats['survive'] is True:
-                self.survivors[entity].high_score = stats['grade']
+        survivors = self.get_survivors()
+        for survivor in survivors:
+            if survivor.alive is False:
+                self.survivor_fallen(survivor)
                 continue
-            self.survivor_fallen(entity)
-
-        for survivor in self.survivors:
-            survivor.grow_up()
+            survivor.entity.grow_up()
             self.survivor_matching(survivor)
         self.survivor_pairing()
 
         self.year += 1
-        return grades
+        return survivors
 
     def survivor_born(self, family: Family):
         if family.is_reproducible(self.year) is False:
