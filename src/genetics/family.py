@@ -64,13 +64,20 @@ class Entity:
         self.name = name
         self.year = year
         self.age = 0
+        self.alive = True
         self.genetics = genetics
 
     def grow_up(self):
         self.age += 1
 
-    def is_alive(self, year):
-        return self.year + self.age == year
+    def step(self, alive: bool):
+        if alive is False:
+            self.alive = False
+            return
+        self.grow_up()
+
+    def is_alive(self):
+        return self.alive
 
     def __repr__(self):
         return str({k: v for k, v in self.__dict__.items() if v is not self.genetics})
@@ -90,8 +97,8 @@ class Family:
         self.children.append(child)
         return child
 
-    def get_children_alive(self, year):
-        return [child for child in self.children if child.is_alive(year)]
+    def get_children_alive(self):
+        return [child for child in self.children if child.is_alive()]
 
     def is_parent(self, entity: Entity):
         return self.parent_a is entity or self.parent_b is entity
@@ -99,28 +106,28 @@ class Family:
     def is_child(self, entity: Entity):
         return entity in self.children
 
-    def is_reproducible(self, year):
+    def is_reproducible(self):
         if len(self.children) > 0:
             youngest_child = self.children[-1]
             has_newborn = youngest_child.age == 0
         else:
             has_newborn = False
-        return self.is_partner_alive(year) and not has_newborn
+        return self.is_partner_alive() and not has_newborn
 
-    def is_parent_alive(self, year):
-        return self.parent_a.is_alive(year) or self.parent_b.is_alive(year)
+    def is_parent_alive(self):
+        return self.parent_a.is_alive() or self.parent_b.is_alive()
 
-    def is_partner_alive(self, year):
-        return self.parent_a.is_alive(year) and self.parent_b.is_alive(year)
+    def is_partner_alive(self):
+        return self.parent_a.is_alive() and self.parent_b.is_alive()
 
-    def is_children_alive(self, year):
+    def is_children_alive(self):
         for child in self.children:
-            if child.is_alive(year):
+            if child.is_alive():
                 return True
         return False
 
-    def is_family_alive(self, year):
-        return self.is_partner_alive(year) or self.is_children_alive(year)
+    def is_family_alive(self):
+        return self.is_partner_alive() or self.is_children_alive()
 
 
 def generate_genetics(genetics):

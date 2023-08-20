@@ -40,16 +40,19 @@ class Archive:
         self.families.append(family)
         self.current_family = family
 
-    def has_active_family(self, year):
+    def has_active_family(self):
         if self.current_family is None:
             return False
-        if self.current_family.is_family_alive(year) is True:
+        if self.current_family.is_family_alive() is True:
             return True
         self.current_family = None
         return False
 
-    def is_looking_for_mate(self, year):
-        return self.has_active_family(year) is False
+    def is_looking_for_mate(self):
+        if self.current_family is None:
+            return True
+        return self.current_family.is_partner_alive() is False
+
 
 
 class Survival:
@@ -128,7 +131,7 @@ class Survival:
         archive.register_family(family)
 
     def survivor_born(self, family: Family):
-        if family.is_reproducible(self.year) is False:
+        if family.is_reproducible() is False:
             return
         child = family.create_child(f'Child {self.log_count}', self.year)
         self.survivor_record(child, family)
@@ -145,7 +148,7 @@ class Survival:
         if survivor.entity.age < 5:
             return False
         status = self.survivors[survivor]
-        if status.is_looking_for_mate(self.year) is False:
+        if status.is_looking_for_mate() is False:
             return False
         self.looking_for_mate.append(survivor)
         return True
