@@ -80,6 +80,42 @@ class SurvivalArchive:
         return archive.current_family
 
 
+class Matcher:
+    def __init__(self, archive: SurvivalArchive):
+        self.looking_for_mate: List[Survivor] = []
+        self.archive: archive = archive
+
+    def start_dating(self, survivor: Survivor):
+        if survivor in self.looking_for_mate:
+            return True
+        if survivor.entity.age < 5:
+            return False
+        status = self.archive.get_archive(survivor.entity)
+        if status.is_looking_for_mate() is False:
+            return False
+        self.looking_for_mate.append(survivor)
+        return True
+
+    def create_pairs(self):
+        amount_potential_mates = len(self.looking_for_mate)
+        if amount_potential_mates < 2:
+            return
+        amount_potential_pairs = amount_potential_mates // 2
+        for _ in range(amount_potential_pairs):
+            partner_a = self.find_best_partner()
+            partner_b = self.find_best_partner()
+            family = Family(partner_a.entity, partner_b.entity)
+            self.archive.get_archive(partner_a.entity).register_family(family)
+            self.archive.get_archive(partner_b.entity).register_family(family)
+
+    def find_best_partner(self):
+        # Work in process: add logic avoiding incest
+        def filter_score(stats: Survivor):
+            return stats.points
+
+        survivor = max(self.looking_for_mate, key=filter_score)
+        self.looking_for_mate.remove(survivor)
+        return survivor
 
 
 class Survival:
