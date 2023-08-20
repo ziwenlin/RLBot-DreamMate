@@ -54,6 +54,33 @@ class Archive:
         return self.current_family.is_partner_alive() is False
 
 
+class SurvivalArchive:
+    def __init__(self):
+        self.survivor_log: Dict[Entity, Survivor] = {}
+        self.record_log: Dict[Survivor, Archive] = {}
+
+    def create_record(self, survivor: Survivor, archive: Archive):
+        self.survivor_log[survivor.entity] = survivor
+        self.record_log[survivor] = archive
+
+    def get_archive(self, entity: Entity):
+        survivor = self.survivor_log.get(entity)
+        archive = self.record_log.get(survivor)
+        return archive
+
+    def get_survivor(self, entity: Entity):
+        return self.survivor_log.get(entity)
+
+    def get_origin(self, entity: Entity):
+        archive = self.get_archive(entity)
+        return archive.origin
+
+    def get_family(self, entity: Entity):
+        archive = self.get_archive(entity)
+        return archive.current_family
+
+
+
 
 class Survival:
     def __init__(self, population_max=100):
