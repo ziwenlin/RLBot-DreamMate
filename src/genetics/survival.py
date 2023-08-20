@@ -26,7 +26,7 @@ class Survivor:
                     for k, v in self.__dict__.items()})
 
 
-class Archive:
+class Register:
     def __init__(self, survivor: Survivor):
         self.survivor = survivor
         self.families: List[Family] = []
@@ -54,18 +54,18 @@ class Archive:
         return self.current_family.is_partner_alive() is False
 
 
-class SurvivalArchive:
+class Archive:
     def __init__(self):
         self.survivor_log: Dict[Entity, Survivor] = {}
-        self.record_log: Dict[Survivor, Archive] = {}
+        self.register_log: Dict[Survivor, Register] = {}
 
-    def create_record(self, survivor: Survivor, archive: Archive):
+    def create_record(self, survivor: Survivor, archive: Register):
         self.survivor_log[survivor.entity] = survivor
-        self.record_log[survivor] = archive
+        self.register_log[survivor] = archive
 
     def get_archive(self, entity: Entity):
         survivor = self.survivor_log.get(entity)
-        archive = self.record_log.get(survivor)
+        archive = self.register_log.get(survivor)
         return archive
 
     def get_survivor(self, entity: Entity):
@@ -81,7 +81,7 @@ class SurvivalArchive:
 
 
 class Matcher:
-    def __init__(self, archive: SurvivalArchive):
+    def __init__(self, archive: Archive):
         self.looking_for_mate: List[Survivor] = []
         self.archive: archive = archive
 
@@ -120,8 +120,8 @@ class Matcher:
 
 class Survival:
     def __init__(self, population_max=100):
-        self.survivors_log: Dict[Survivor, Archive] = {}
-        self.survivors: Dict[Survivor, Archive] = {}
+        self.survivors_log: Dict[Survivor, Register] = {}
+        self.survivors: Dict[Survivor, Register] = {}
         self.entity_log: Dict[Entity, Survivor] = {}
         self.looking_for_mate: List[Survivor] = []
 
@@ -187,11 +187,11 @@ class Survival:
     def survivor_record(self, entity: Entity, family: Optional[Family] = None):
         survivor = Survivor(entity)
         self.entity_log[entity] = survivor
-        self.survivors[survivor] = archive = Archive(survivor)
+        self.survivors[survivor] = register = Register(survivor)
         self.log_count += 1
         if family is None:
             return
-        archive.register_family(family)
+        register.register_family(family)
 
     def survivor_born(self, family: Family):
         if family.is_reproducible() is False:
