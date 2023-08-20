@@ -67,14 +67,11 @@ class Entity:
         self.alive = True
         self.genetics = genetics
 
-    def grow_up(self):
-        self.age += 1
-
     def step(self, alive: bool):
         if alive is False:
             self.alive = False
             return
-        self.grow_up()
+        self.age += 1
 
     def is_alive(self):
         return self.alive

@@ -111,10 +111,10 @@ class Survival:
     def survive(self):
         survivors = self.get_survivors()
         for survivor in survivors:
+            survivor.entity.step(survivor.alive)
             if survivor.alive is False:
                 self.survivor_fallen(survivor)
                 continue
-            survivor.entity.grow_up()
             self.survivor_matching(survivor)
         self.survivor_pairing()
 
