@@ -213,12 +213,13 @@ class Survival:
     def survivor_pairing(self):
         self.matcher.create_pairs()
 
-    def evaluate(self, survivors: List[Survivor]):
-        def filter_score(stats: Survivor):
+    def evaluate(self):
+        def get_points(stats: Survivor):
             return stats.points
 
-        minimum = min(survivors, key=filter_score).points
-        maximum = max(survivors, key=filter_score).points
+        survivors = self.get_survivors()
+        minimum = min(survivors, key=get_points).points
+        maximum = max(survivors, key=get_points).points
         average = sum(list(stats.points for stats in survivors)) / len(survivors)
         average_range = average - minimum
         middle_range = maximum - minimum
@@ -229,4 +230,3 @@ class Survival:
             stats.set_score(score)
             stats.set_vitality(vitality)
             stats.alive = vitality > random.random()
-        return survivors
