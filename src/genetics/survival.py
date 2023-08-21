@@ -117,13 +117,16 @@ class Matcher:
         self.looking_for_mate.remove(survivor)
         return survivor
 
+    def remove(self, survivor):
+        if survivor in self.looking_for_mate:
+            self.looking_for_mate.remove(survivor)
+
 
 class Survival:
     def __init__(self, population_max=100):
-        self.survivors_log: Dict[Survivor, Register] = {}
         self.survivors: Dict[Survivor, Register] = {}
-        self.entity_log: Dict[Entity, Survivor] = {}
-        self.looking_for_mate: List[Survivor] = []
+        self.archive = archive = Archive()
+        self.matcher = Matcher(archive)
 
         self.population_max = population_max
         self.population_current = 0
@@ -186,8 +189,9 @@ class Survival:
 
     def survivor_record(self, entity: Entity, family: Optional[Family] = None):
         survivor = Survivor(entity)
-        self.entity_log[entity] = survivor
-        self.survivors[survivor] = register = Register(survivor)
+        register = Register(survivor)
+        self.survivors[survivor] = register
+        self.archive.create_record(survivor, register)
         self.log_count += 1
         if family is None:
             return
@@ -200,41 +204,14 @@ class Survival:
         self.survivor_record(child, family)
 
     def survivor_fallen(self, survivor: Survivor):
-        status = self.survivors.pop(survivor)
-        self.survivors_log[survivor] = status
-        if survivor in self.looking_for_mate:
-            self.looking_for_mate.remove(survivor)
+        self.survivors.pop(survivor)
+        self.matcher.remove(survivor)
 
     def survivor_matching(self, survivor: Survivor):
-        if survivor in self.looking_for_mate:
-            return True
-        if survivor.entity.age < 5:
-            return False
-        status = self.survivors[survivor]
-        if status.is_looking_for_mate() is False:
-            return False
-        self.looking_for_mate.append(survivor)
-        return True
+        self.matcher.start_dating(survivor)
 
     def survivor_pairing(self):
-        amount_potential_mates = len(self.looking_for_mate)
-        if amount_potential_mates < 2:
-            return
-        amount_potential_pairs = amount_potential_mates // 2
-        for _ in range(amount_potential_pairs):
-            partner_a = self.select_best_mate()
-            partner_b = self.select_best_mate()
-            family = Family(partner_a.entity, partner_b.entity)
-            self.survivors[partner_a].register_family(family)
-            self.survivors[partner_b].register_family(family)
-
-    def select_best_mate(self):
-        def filter_score(stats: Survivor):
-            return stats.points
-
-        survivor = max(self.looking_for_mate, key=filter_score)
-        self.looking_for_mate.remove(survivor)
-        return survivor
+        self.matcher.create_pairs()
 
     def evaluate(self, survivors: List[Survivor]):
         def filter_score(stats: Survivor):
