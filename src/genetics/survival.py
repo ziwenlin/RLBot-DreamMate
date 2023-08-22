@@ -137,7 +137,7 @@ class Survival:
         return list(self.survivors)
 
     def generate(self):
-        amount = self.population_max - self.population_current
+        amount = self.statistics()['missing']
         if amount < 0:
             return 0
         for x in range(amount):
@@ -152,7 +152,6 @@ class Survival:
             })
             entity = Entity(f'Entity {self.log_count}', self.year, genetics)
             self.survivor_record(entity)
-        self.population_current += amount
         return amount
 
     def statistics(self):
@@ -164,23 +163,17 @@ class Survival:
                 'born': amount_born, 'generated': amount_generated, }
 
     def reproduce(self):
-        amount_alive = len(self.survivors)
-        amount_missing = self.population_current - amount_alive
-        self.population_current += -amount_missing
-        if self.population_max < amount_alive:
-            return (self.population_current, amount_alive, amount_missing, 0, 0)
+        statistics = self.statistics()
         amount_born = 0
         for survivor in list(self.survivors):
+            if amount_born >= statistics['born']:
+                break
             family = self.survivors[survivor].current_family
             if family is None:
                 continue
             self.survivor_born(family)
             amount_born += 1
-        self.population_current += amount_born
-        amount_generated = self.generate()
-
-        return (self.population_current, amount_alive, amount_missing,
-                amount_born, amount_generated,)
+        return amount_born
 
     def survive(self):
         survivors = self.get_survivors()
@@ -200,6 +193,7 @@ class Survival:
         register = Register(survivor)
         self.survivors[survivor] = register
         self.archive.create_record(survivor, register)
+        self.population_current += 1
         self.log_count += 1
         if family is None:
             return
@@ -214,6 +208,7 @@ class Survival:
     def survivor_fallen(self, survivor: Survivor):
         self.survivors.pop(survivor)
         self.matcher.remove(survivor)
+        self.population_current += -1
 
     def survivor_matching(self, survivor: Survivor):
         self.matcher.start_dating(survivor)
