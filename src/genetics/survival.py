@@ -182,8 +182,8 @@ class Survival:
             if survivor.alive is False:
                 self.survivor_fallen(survivor)
                 continue
-            self.survivor_matching(survivor)
-        self.survivor_pairing()
+            self.matcher.start_dating(survivor)
+        self.matcher.create_pairs()
 
         self.year += 1
         return survivors
@@ -209,12 +209,6 @@ class Survival:
         self.survivors.pop(survivor)
         self.matcher.remove(survivor)
         self.population_current += -1
-
-    def survivor_matching(self, survivor: Survivor):
-        self.matcher.start_dating(survivor)
-
-    def survivor_pairing(self):
-        self.matcher.create_pairs()
 
     def evaluate(self):
         def get_points(stats: Survivor):
