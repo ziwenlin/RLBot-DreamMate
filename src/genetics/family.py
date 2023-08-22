@@ -127,6 +127,14 @@ class Family:
         return self.is_partner_alive() or self.is_children_alive()
 
 
+class Template:
+    def generate(self):
+        templates: GENETICS = {
+            group: tuple(random.random() - 0.5 for _ in range(size))
+            for group, size in self.__dict__.items()}
+        return Genetics(templates, templates)
+
+
 def generate_genetics(genetics):
     templates: GENETICS = {
         group: tuple(random.random() - 0.5 for _ in range(len(gene)))
