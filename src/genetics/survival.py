@@ -100,6 +100,8 @@ class Matcher:
         amount_potential_mates = len(self.looking_for_mate)
         if amount_potential_mates < 2:
             return
+        # Work in process: Add logic to prevent incest between matches
+        self.sort_best_partner()
         amount_potential_pairs = amount_potential_mates // 2
         for _ in range(amount_potential_pairs):
             partner_a = self.find_best_partner()
@@ -108,13 +110,16 @@ class Matcher:
             self.archive.get_archive(partner_a.entity).register_family(family)
             self.archive.get_archive(partner_b.entity).register_family(family)
 
-    def find_best_partner(self):
-        # Work in process: add logic avoiding incest
+    def sort_best_partner(self):
         def filter_score(stats: Survivor):
             return stats.points
 
-        survivor = max(self.looking_for_mate, key=filter_score)
-        self.looking_for_mate.remove(survivor)
+        self.looking_for_mate.sort(key=filter_score, reverse=True)
+
+    def find_best_partner(self):
+        survivor = self.looking_for_mate.pop(0)
+        if survivor.alive is False:
+            return self.find_best_partner()
         return survivor
 
     def remove(self, survivor):
