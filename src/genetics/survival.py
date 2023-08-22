@@ -81,14 +81,15 @@ class Archive:
 
 
 class Matcher:
-    def __init__(self, archive: Archive):
+    def __init__(self, archive: Archive, pairing_age: int):
         self.looking_for_mate: List[Survivor] = []
         self.archive: archive = archive
+        self.pairing_age: int = pairing_age
 
     def start_dating(self, survivor: Survivor):
         if survivor in self.looking_for_mate:
             return True
-        if survivor.entity.age < 5:
+        if survivor.entity.age < self.pairing_age:
             return False
         status = self.archive.get_archive(survivor.entity)
         if status.is_looking_for_mate() is False:
@@ -128,10 +129,10 @@ class Matcher:
 
 
 class Survival:
-    def __init__(self, population_max=100):
+    def __init__(self, population_max=100, pairing_age=2):
         self.survivors: Dict[Survivor, Register] = {}
         self.archive = archive = Archive()
-        self.matcher = Matcher(archive)
+        self.matcher = Matcher(archive, pairing_age)
 
         self.population_max = population_max
         self.population_current = 0
