@@ -176,7 +176,9 @@ class Survival:
             family = self.survivors[survivor].current_family
             if family is None:
                 continue
-            self.survivor_born(family)
+            has_reproduced = self.survivor_born(family)
+            if has_reproduced is False:
+                continue
             amount_born += 1
         return amount_born
 
@@ -206,9 +208,10 @@ class Survival:
 
     def survivor_born(self, family: Family):
         if family.is_reproducible() is False:
-            return
+            return False
         child = family.create_child(f'Child {self.log_count}', self.year)
         self.survivor_record(child, family)
+        return True
 
     def survivor_fallen(self, survivor: Survivor):
         self.survivors.pop(survivor)
