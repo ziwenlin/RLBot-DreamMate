@@ -1,7 +1,7 @@
 import random
 from typing import Dict, List, Optional
 
-from genetics.family import Entity, generate_genetics, Family
+from genetics.family import Entity, Family, Template
 
 
 class Survivor:
@@ -129,10 +129,11 @@ class Matcher:
 
 
 class Survival:
-    def __init__(self, population_max=100, pairing_age=2):
+    def __init__(self, template: Template, population_max=100, pairing_age=2):
         self.survivors: Dict[Survivor, Register] = {}
         self.archive = archive = Archive()
         self.matcher = Matcher(archive, pairing_age)
+        self.genetics = template
 
         self.population_max = population_max
         self.population_current = 0
@@ -147,16 +148,7 @@ class Survival:
         if amount < 0:
             return 0
         for x in range(amount):
-            genetics = generate_genetics({
-                # to be done: make it simple
-                # and supplied from the outside code
-                # not hard coded
-                'health': (0, 0),
-                'strength': (0, 0, 0, 0),
-                'speed': (0, 0, 0),
-                'intelligence': (0, 0, 0, 0, 0)
-            })
-            entity = Entity(f'Entity {self.log_count}', self.year, genetics)
+            entity = Entity(f'Entity {self.log_count}', self.year, self.genetics.generate())
             self.survivor_record(entity)
         return amount
 
