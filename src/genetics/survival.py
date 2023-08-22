@@ -155,6 +155,14 @@ class Survival:
         self.population_current += amount
         return amount
 
+    def statistics(self):
+        amount_alive = self.population_current
+        amount_missing = self.population_max - amount_alive
+        amount_born = amount_missing // 2
+        amount_generated = amount_missing - amount_born
+        return {'alive': amount_alive, 'missing': amount_missing,
+                'born': amount_born, 'generated': amount_generated, }
+
     def reproduce(self):
         amount_alive = len(self.survivors)
         amount_missing = self.population_current - amount_alive
