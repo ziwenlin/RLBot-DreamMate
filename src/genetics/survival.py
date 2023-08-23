@@ -1,6 +1,8 @@
 import random
 from typing import Dict, List, Optional
 
+import numpy
+
 from genetics.family import Entity, Family, Template
 
 
@@ -126,6 +128,36 @@ class Matcher:
     def remove(self, survivor):
         if survivor in self.looking_for_mate:
             self.looking_for_mate.remove(survivor)
+
+
+class Scores:
+    def __init__(self):
+        self.best: Optional[float, int] = None
+        self.median: Optional[float, int] = None
+        self.middle: Optional[float, int] = None
+        self.average: Optional[float, int] = None
+        self.worst: Optional[float, int] = None
+
+    def __repr__(self):
+        return str({key: round(value, 3) for key, value in self.__dict__.items()})
+
+
+class Observer:
+    def __init__(self):
+        self.history: List[List[Survivor]] = []
+        self.scores: List[Scores] = []
+
+    def evaluate(self, points: List[float]):
+        scores = Scores()
+
+        scores.best = max(points)
+        scores.worst = min(points)
+        scores.median = numpy.median(points)
+        scores.middle = (scores.best + scores.worst) / 2
+        scores.average = sum(points) / len(points)
+
+        self.scores.append(scores)
+        return scores
 
 
 class Survival:
