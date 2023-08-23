@@ -165,6 +165,7 @@ class Survival:
         self.survivors: Dict[Survivor, Register] = {}
         self.archive = archive = Archive()
         self.matcher = Matcher(archive, pairing_age)
+        self.observer = Observer()
         self.genetics = template
 
         self.population_max = population_max
@@ -244,19 +245,16 @@ class Survival:
         self.population_current += -1
 
     def evaluate(self):
-        def get_points(stats: Survivor):
-            return stats.points
-
         survivors = self.get_survivors()
-        minimum = min(survivors, key=get_points).points
-        maximum = max(survivors, key=get_points).points
-        average = sum(list(stats.points for stats in survivors)) / len(survivors)
-        average_range = average - minimum
-        middle_range = maximum - minimum
+        points = list(stats.points for stats in survivors)
+        scores = self.observer.evaluate(points)
+
+        average_range = scores.average - scores.worst
+        middle_range = scores.best - scores.worst
         for stats in survivors:
-            points = stats.points
-            score = (points - minimum) / middle_range
-            vitality = (points - minimum) / average_range
+            score = (stats.points - scores.worst) / middle_range
+            vitality = (stats.points - scores.worst) / average_range
             stats.set_score(score)
             stats.set_vitality(vitality)
             stats.alive = vitality > random.random()
+        return scores
