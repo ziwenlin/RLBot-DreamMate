@@ -138,6 +138,18 @@ class Scores:
         self.average: Optional[float, int] = None
         self.worst: Optional[float, int] = None
 
+    def __add__(self, other: 'Scores'):
+        score = Scores()
+        for keys in score.__dict__:
+            score.__dict__[keys] = self.__dict__[keys] + other.__dict__[keys]
+        return score
+
+    def __sub__(self, other: 'Scores'):
+        score = Scores()
+        for keys in score.__dict__:
+            score.__dict__[keys] = self.__dict__[keys] - other.__dict__[keys]
+        return score
+
     def __repr__(self):
         return str({key: round(value, 3) for key, value in self.__dict__.items()})
 
