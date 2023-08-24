@@ -14,6 +14,11 @@ class Survivor:
         self.vitality = 0.0
         self.alive = True
 
+    def update(self, score: float, vitality: float, alive: bool):
+        self.vitality = vitality
+        self.score = score
+        self.alive = alive
+
     def set_vitality(self, vitality: float):
         self.vitality = vitality
 
@@ -266,7 +271,6 @@ class Survival:
         for stats in survivors:
             score = (stats.points - scores.worst) / middle_range
             vitality = (stats.points - scores.worst) / average_range
-            stats.set_score(score)
-            stats.set_vitality(vitality)
-            stats.alive = vitality > random.random()
+            survival = vitality > random.random()
+            stats.update(score, vitality, survival)
         return scores
