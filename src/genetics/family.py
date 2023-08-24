@@ -1,17 +1,17 @@
 import random
 from typing import Dict, List, Tuple
 
-GENE = Tuple[float, ...]
-GENETICS = Dict[str, GENE]
+Allele = Tuple[float, ...]
+Genes = Dict[str, Allele]
 
 
 class Genetics:
-    def __init__(self, genetics_a, genetics_b):
-        self.genetics_a: GENETICS = genetics_a
-        self.genetics_b: GENETICS = genetics_b
+    def __init__(self, gene_a: Genes, gene_b: Genes):
+        self.genes_a: Genes = gene_a
+        self.genes_b: Genes = gene_b
 
     def mutation(self, probability=0.001):
-        group_keys = self.genetics_a.keys()
+        group_keys = self.genes_a.keys()
         for group in group_keys:
             if random.random() > probability:
                 continue
@@ -26,36 +26,36 @@ class Genetics:
         self.set_gene(group, choice, tuple(gene))
 
     def get_genetics(self):
-        group_keys = self.genetics_a.keys()
-        genetics: GENETICS = {group: self.get_gene(group) for group in group_keys}
+        group_keys = self.genes_a.keys()
+        genetics: Genes = {group: self.get_gene(group) for group in group_keys}
         return genetics
 
     def get_genetics_copy(self):
-        group_keys = self.genetics_a.keys()
+        group_keys = self.genes_a.keys()
         group_choice = {group: random.random() for group in group_keys}
-        genetics: GENETICS = {
+        genetics: Genes = {
             group: self.get_gene_copy(group, choice)
             for group, choice in group_choice.items()
         }
         return genetics
 
     def get_gene(self, group: str):
-        gene_a = self.genetics_a[group]
-        gene_b = self.genetics_b[group]
-        gene: GENE = tuple((a + b) / 2 for a, b in zip(gene_a, gene_b))
+        gene_a = self.genes_a[group]
+        gene_b = self.genes_b[group]
+        gene: Allele = tuple((a + b) / 2 for a, b in zip(gene_a, gene_b))
         return gene
 
-    def set_gene(self, group: str, choice: float, gene: GENE):
+    def set_gene(self, group: str, choice: float, gene: Allele):
         if choice < 0.5:
-            self.genetics_a[group] = gene
+            self.genes_a[group] = gene
         else:
-            self.genetics_b[group] = gene
+            self.genes_b[group] = gene
 
     def get_gene_copy(self, group: str, choice: float):
         if choice < 0.5:
-            gene = self.genetics_a[group]
+            gene = self.genes_a[group]
         else:
-            gene = self.genetics_b[group]
+            gene = self.genes_b[group]
         return gene
 
 
@@ -129,7 +129,7 @@ class Family:
 
 class Template:
     def generate(self):
-        templates: GENETICS = {
+        templates: Genes = {
             group: tuple(random.random() - 0.5 for _ in range(size))
             for group, size in self.__dict__.items()}
         return Genetics(templates, templates)
