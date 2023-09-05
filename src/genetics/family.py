@@ -1,8 +1,8 @@
 import random
 from typing import Dict, List, Tuple
 
-Allele = Tuple[float, ...]
-Genes = Dict[str, Allele]
+Gen = Tuple[float, ...]
+Genes = Dict[str, Gen]
 
 
 class Genetics:
@@ -42,10 +42,10 @@ class Genetics:
     def get_gene(self, group: str):
         gene_a = self.genes_a[group]
         gene_b = self.genes_b[group]
-        gene: Allele = tuple((a + b) / 2 for a, b in zip(gene_a, gene_b))
+        gene: Gen = tuple((a + b) / 2 for a, b in zip(gene_a, gene_b))
         return gene
 
-    def set_gene(self, group: str, choice: float, gene: Allele):
+    def set_gene(self, group: str, choice: float, gene: Gen):
         if choice < 0.5:
             self.genes_a[group] = gene
         else:
