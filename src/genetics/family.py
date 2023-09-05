@@ -10,6 +10,28 @@ class Genetics:
         self.genes_a: Genes = gene_a
         self.genes_b: Genes = gene_b
 
+    def get_crossover_genes(self):
+        trait_names = self.genes_a.keys()
+        genes_choice = (self.genes_a, self.genes_b)
+        genes: Genes = {
+            trait: random.choice(genes_choice)[trait]
+            for trait in trait_names
+        }
+        return genes
+
+    def get_joint_genes(self):
+        trait_names = self.genes_a.keys()
+        genes: Genes = {
+            trait: self.__get_joint_gen(trait)
+            for trait in trait_names
+        }
+        return genes
+
+    def __get_joint_gen(self, trait: str):
+        genes_pair = zip(self.genes_a[trait], self.genes_b[trait])
+        joint_gen: Gen = tuple((a + b) / 2 for a, b in genes_pair)
+        return joint_gen
+
     def mutation(self, probability=0.001):
         group_keys = self.genes_a.keys()
         for group in group_keys:
