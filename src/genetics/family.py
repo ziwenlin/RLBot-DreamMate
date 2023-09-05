@@ -58,6 +58,15 @@ class Genetics:
             gene = self.genes_b[group]
         return gene
 
+    def __repr__(self):
+        trait_names = self.genes_a.keys()
+        return str({
+            trait: tuple(
+                (round(a + b, 3) / 2, round(a, 4), round(b, 4))
+                for a, b in zip(self.genes_a[trait], self.genes_b[trait]))
+            for trait in trait_names
+        })
+
 
 class Entity:
     def __init__(self, name, year, genetics: Genetics):
