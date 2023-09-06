@@ -32,6 +32,7 @@ class Genetics:
         joint_gen: Gen = tuple((a + b) / 2 for a, b in genes_pair)
         return joint_gen
 
+    @DeprecationWarning
     def mutation(self, probability=0.001):
         group_keys = self.genes_a.keys()
         for group in group_keys:
@@ -41,17 +42,20 @@ class Genetics:
             mutation = random.random() + 0.5
             self.mutation_gene(group, choice, mutation)
 
+    @DeprecationWarning
     def mutation_gene(self, group: str, choice: float, mutation: float):
         gene = list(self.get_gene_copy(group, choice))
         index = random.randrange(len(gene))
         gene[index] *= mutation
         self.set_gene(group, choice, tuple(gene))
 
+    @DeprecationWarning
     def get_genetics(self):
         group_keys = self.genes_a.keys()
         genetics: Genes = {group: self.get_gene(group) for group in group_keys}
         return genetics
 
+    @DeprecationWarning
     def get_genetics_copy(self):
         group_keys = self.genes_a.keys()
         group_choice = {group: random.random() for group in group_keys}
@@ -61,18 +65,21 @@ class Genetics:
         }
         return genetics
 
+    @DeprecationWarning
     def get_gene(self, group: str):
         gene_a = self.genes_a[group]
         gene_b = self.genes_b[group]
         gene: Gen = tuple((a + b) / 2 for a, b in zip(gene_a, gene_b))
         return gene
 
+    @DeprecationWarning
     def set_gene(self, group: str, choice: float, gene: Gen):
         if choice < 0.5:
             self.genes_a[group] = gene
         else:
             self.genes_b[group] = gene
 
+    @DeprecationWarning
     def get_gene_copy(self, group: str, choice: float):
         if choice < 0.5:
             gene = self.genes_a[group]
