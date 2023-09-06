@@ -10,6 +10,15 @@ class Genetics:
         self.genes_a: Genes = gene_a
         self.genes_b: Genes = gene_b
 
+    def get_mutated_crossover_genes(self):
+        genes = self.get_crossover_genes()
+        trait = random.choice(tuple(genes))
+        genes[trait] = tuple(
+            value * random.uniform(0.5, 1.5)
+            for value in genes[trait]
+        )
+        return genes
+
     def get_crossover_genes(self):
         trait_names = self.genes_a.keys()
         genes_choice = (self.genes_a, self.genes_b)
@@ -125,8 +134,8 @@ class Family:
         self.children: List[Entity] = []
 
     def create_child(self, name, year):
-        genetics_a = self.parent_a.genetics.get_genetics_copy()
-        genetics_b = self.parent_b.genetics.get_genetics_copy()
+        genetics_a = self.parent_a.genetics.get_mutated_crossover_genes()
+        genetics_b = self.parent_b.genetics.get_mutated_crossover_genes()
         genetics = Genetics(genetics_a, genetics_b)
         child = Entity(name, year, genetics)
         self.children.append(child)
