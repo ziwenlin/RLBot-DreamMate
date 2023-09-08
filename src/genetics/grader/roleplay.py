@@ -106,3 +106,14 @@ def spawn_player(attributes: dict):
         spirit_energy, instinct_talent
     )
     return player
+
+
+def spawn_enemy(difficulty: float):
+    difficulty = difficulty / 1000 + 0.001
+
+    # Goblin attributes
+    attributes = (3.3, 1.8, 0.5, 1.5, 1.2, 0.8, 2.2)
+    hp, ap, mp, bp, ec, se, it = (stat * difficulty for stat in attributes)
+
+    enemy = Creature(hp, ap, mp, bp, ec, se, it)
+    return enemy
