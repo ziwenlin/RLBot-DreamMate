@@ -1,7 +1,15 @@
 """
 This grader is based on logic of roleplaying games.
 """
+from genetics.family import Template
 
+
+class Attributes(Template):
+    def __init__(self):
+        self.health = 2
+        self.strength = 4
+        self.speed = 3
+        self.intelligence = 5
 
 class Creature:
     def __init__(self, hp, ap, mp, bp, ec, se, it):
