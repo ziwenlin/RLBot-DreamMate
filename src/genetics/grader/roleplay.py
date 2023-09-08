@@ -1,7 +1,7 @@
 """
 This grader is based on logic of roleplaying games.
 """
-from genetics.family import Template
+from genetics.family import Template, Entity
 
 
 class Attributes(Template):
@@ -117,3 +117,41 @@ def spawn_enemy(difficulty: float):
 
     enemy = Creature(hp, ap, mp, bp, ec, se, it)
     return enemy
+
+
+def grade_entity(entity: Entity):
+    genes = entity.genetics.get_joint_genes()
+    player = spawn_player(genes)
+
+    points = 1
+    for level in range(1000):
+        reward = game_level(player, level)
+        if reward <= 0:
+            break
+
+        player.regenerate()
+        points += reward
+
+    return points
+
+
+def game_level(player: Creature, level: int):
+    enemy = spawn_enemy(level ** 1.2)
+
+    reward_decay = 0.1
+    reward = 10
+    while reward > 0:
+        player.attack(enemy)
+        player.magic(enemy)
+        if not enemy.is_alive():
+            reward += 10
+            break
+
+        enemy.attack(player)
+        enemy.magic(player)
+        if not player.is_alive():
+            reward += -10
+            break
+
+        reward -= reward_decay
+    return reward
