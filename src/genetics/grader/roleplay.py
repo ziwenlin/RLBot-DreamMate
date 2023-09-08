@@ -11,6 +11,7 @@ class Attributes(Template):
         self.speed = 3
         self.intelligence = 5
 
+
 class Creature:
     def __init__(self, hp, ap, mp, bp, ec, se, it):
         self.hitpoints = hp
@@ -83,3 +84,25 @@ class Creature:
 
     def __repr__(self):
         return f"HP:{self.health:.2f} MP:{self.magica:.2f} SP:{self.stamina:.2f}"
+
+
+def spawn_player(attributes: dict):
+    health, resistance = attributes['health']
+    strength, durability, block, weight = attributes['strength']
+    speed, agility, endurance = attributes['speed']
+    intelligence, courage, creativity, skill, prediction = attributes['intelligence']
+
+    hitpoints = abs(health * resistance * durability)
+    attack_power = abs(strength * skill) + abs(agility)
+    magic_power = abs(intelligence * creativity * skill)
+    block_power = abs(block * strength * weight * courage) + abs(speed)
+    evade_chance = abs(speed * agility * prediction) - abs(weight)
+    spirit_energy = abs(endurance * courage * resistance)
+    instinct_talent = abs(creativity * skill * endurance * prediction * intelligence)
+
+    player = Creature(
+        hitpoints, attack_power, magic_power,
+        block_power, evade_chance,
+        spirit_energy, instinct_talent
+    )
+    return player
