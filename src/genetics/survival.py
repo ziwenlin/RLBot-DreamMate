@@ -137,11 +137,11 @@ class Matcher:
 
 class Scores:
     def __init__(self):
-        self.best: Optional[float, int] = None
-        self.median: Optional[float, int] = None
-        self.middle: Optional[float, int] = None
-        self.average: Optional[float, int] = None
-        self.worst: Optional[float, int] = None
+        self.best: float = 0
+        self.median: float = 0
+        self.middle: float = 0
+        self.average: float = 0
+        self.worst: float = 0
 
     def __add__(self, other: 'Scores'):
         score = Scores()
@@ -169,7 +169,7 @@ class Observer:
 
         scores.best = max(points)
         scores.worst = min(points)
-        scores.median = numpy.median(points)
+        scores.median = float(numpy.median(points))
         scores.middle = (scores.best + scores.worst) / 2
         scores.average = sum(points) / len(points)
 
