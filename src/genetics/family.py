@@ -68,8 +68,12 @@ class Entity:
     def is_alive(self):
         return self.alive
 
+    def as_dict(self):
+        exclude = (self.genetics,)
+        return {k: v for k, v in self.__dict__.items() if v not in exclude}
+
     def __repr__(self):
-        return str({k: v for k, v in self.__dict__.items() if v is not self.genetics})
+        return str(self.as_dict())
 
 
 class Family:
