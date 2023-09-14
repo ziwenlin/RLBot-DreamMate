@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 Gen = Tuple[float, ...]
 Genes = Dict[str, Gen]
@@ -74,6 +74,20 @@ class Entity:
 
     def __repr__(self):
         return str(self.as_dict())
+
+
+class Member(Entity):
+    def __init__(self, name, year, genetics: Genetics, family: 'Family' = None):
+        super().__init__(name, year, genetics)
+        self.origin: Optional[Family] = family
+        self.families: List[Family] = []
+
+    def add_family(self, family: 'Family'):
+        self.families.append(family)
+
+    def as_dict(self):
+        exclude = (self.families, self.origin, self.genetics)
+        return {k: v for k, v in self.__dict__.items() if v not in exclude}
 
 
 class Family:
