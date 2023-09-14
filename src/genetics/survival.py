@@ -50,7 +50,7 @@ class Register:
     def has_active_family(self):
         if self.current_family is None:
             return False
-        if self.current_family.is_family_alive() is True:
+        if self.current_family.is_partner_alive() is True:
             return True
         self.current_family = None
         return False
@@ -110,7 +110,7 @@ class Matcher:
             return
         # Work in process: Add logic to prevent incest between matches
         self.sort_best_partner()
-        amount_potential_pairs = amount_potential_mates // 2
+        amount_potential_pairs = amount_potential_mates // 2 - 1
         for _ in range(amount_potential_pairs):
             partner_a = self.find_best_partner()
             partner_b = self.find_best_partner()
@@ -254,7 +254,7 @@ class Survival:
         statistics = self.statistics()
         amount_born = 0
         for survivor in list(self.survivors):
-            if amount_born >= statistics['born']:
+            if amount_born >= statistics['missing']:
                 break
             family = self.survivors[survivor].current_family
             if family is None:
@@ -305,9 +305,11 @@ class Survival:
         survivors = self.get_survivors()
         points = list(stats.points for stats in survivors)
         scores = self.observer.evaluate(points)
+        scores.worst += -1
 
         average_range = scores.average - scores.worst
         middle_range = scores.best - scores.worst
+        median_range = scores.median - scores.worst
         for stats in survivors:
             score = (stats.points - scores.worst) / middle_range
             vitality = (stats.points - scores.worst) / average_range
