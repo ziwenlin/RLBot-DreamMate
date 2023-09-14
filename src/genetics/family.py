@@ -91,26 +91,26 @@ class Member(Entity):
 
 
 class Family:
-    def __init__(self, parent_a: Entity, parent_b: Entity):
-        self.parent_a = parent_a
-        self.parent_b = parent_b
-        self.children: List[Entity] = []
+    def __init__(self, parent_a: Member, parent_b: Member):
+        self.parent_a: Member = parent_a
+        self.parent_b: Member = parent_b
+        self.children: List[Member] = []
 
     def create_child(self, name, year):
         genetics_a = self.parent_a.genetics.get_mutated_crossover_genes()
         genetics_b = self.parent_b.genetics.get_mutated_crossover_genes()
         genetics = Genetics(genetics_a, genetics_b)
-        child = Entity(name, year, genetics)
+        child = Member(name, year, genetics, self)
         self.children.append(child)
         return child
 
     def get_children_alive(self):
         return [child for child in self.children if child.is_alive()]
 
-    def is_parent(self, entity: Entity):
+    def is_parent(self, entity: Member):
         return self.parent_a is entity or self.parent_b is entity
 
-    def is_child(self, entity: Entity):
+    def is_child(self, entity: Member):
         return entity in self.children
 
     def is_reproducible(self):
