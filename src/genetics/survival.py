@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import numpy
 
-from genetics.family import Entity, Family, Template
+from genetics.family import Entity, Family, Template, Genetics
 
 
 class Survivor:
@@ -175,6 +175,46 @@ class Observer:
 
         self.scores.append(scores)
         return scores
+
+
+class Population:
+    def __init__(self, population_max, pairing_age):
+        self.archive = archive = Archive()
+        self.matcher = Matcher(archive, pairing_age)
+        self.survivors: List[Survivor] = []
+        self.register: Dict[Survivor, Register] = {}
+
+        self.population_current = 0
+        self.population_max = population_max
+        self.log_count = 0
+
+    def survivor_record(self, entity: Entity, family: Optional[Family] = None):
+        survivor = Survivor(entity)
+        register = Register(survivor)
+        self.survivors.append(survivor)
+        self.register[survivor] = register
+        self.archive.create_record(survivor, register)
+        self.population_current += 1
+        self.log_count += 1
+        if family is None:
+            return
+        register.register_family(family)
+
+    def survivor_generate(self, year: int, genetics: Genetics):
+        entity = Entity(f'Entity {self.log_count}', year, genetics)
+        self.survivor_record(entity)
+
+    def survivor_born(self, year: int, family: Family):
+        if family.is_reproducible() is False:
+            return False
+        child = family.create_child(f'Child {self.log_count}', year)
+        self.survivor_record(child, family)
+        return True
+
+    def survivor_fallen(self, survivor: Survivor):
+        self.survivors.remove(survivor)
+        self.matcher.remove(survivor)
+        self.population_current += -1
 
 
 class Survival:
