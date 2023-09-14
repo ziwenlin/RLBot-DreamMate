@@ -219,32 +219,22 @@ class Population:
 
 class Survival:
     def __init__(self, template: Template, population_max=100, pairing_age=2):
-        self.survivors: Dict[Survivor, Register] = {}
-        self.archive = archive = Archive()
-        self.matcher = Matcher(archive, pairing_age)
+        self.population = Population(population_max, pairing_age)
         self.observer = Observer()
         self.genetics = template
-
-        self.population_max = population_max
-        self.population_current = 0
-        self.log_count = 0
         self.year = 0
-
-    def get_survivors(self):
-        return list(self.survivors)
 
     def generate(self):
         amount = self.statistics()['missing']
         if amount < 0:
             return 0
         for x in range(amount):
-            entity = Entity(f'Entity {self.log_count}', self.year, self.genetics.generate())
-            self.survivor_record(entity)
+            self.population.survivor_generate(self.year, self.genetics.generate())
         return amount
 
     def statistics(self):
-        amount_alive = self.population_current
-        amount_missing = self.population_max - amount_alive
+        amount_alive = self.population.population_current
+        amount_missing = self.population.population_max - amount_alive
         amount_born = amount_missing // 2
         amount_generated = amount_missing - amount_born
         return {'alive': amount_alive, 'missing': amount_missing,
@@ -253,56 +243,33 @@ class Survival:
     def reproduce(self):
         statistics = self.statistics()
         amount_born = 0
-        for survivor in list(self.survivors):
+        for survivor in self.population.survivors.copy():
             if amount_born >= statistics['missing']:
                 break
-            family = self.survivors[survivor].current_family
+            family = self.population.register[survivor].current_family
             if family is None:
                 continue
-            has_reproduced = self.survivor_born(family)
+            has_reproduced = self.population.survivor_born(self.year, family)
             if has_reproduced is False:
                 continue
             amount_born += 1
         return amount_born
 
     def survive(self):
-        survivors = self.get_survivors()
+        survivors = self.population.survivors.copy()
         for survivor in survivors:
             survivor.entity.step(survivor.alive)
             if survivor.alive is False:
-                self.survivor_fallen(survivor)
+                self.population.survivor_fallen(survivor)
                 continue
-            self.matcher.start_dating(survivor)
-        self.matcher.create_pairs()
+            self.population.matcher.start_dating(survivor)
+        self.population.matcher.create_pairs()
 
         self.year += 1
         return survivors
 
-    def survivor_record(self, entity: Entity, family: Optional[Family] = None):
-        survivor = Survivor(entity)
-        register = Register(survivor)
-        self.survivors[survivor] = register
-        self.archive.create_record(survivor, register)
-        self.population_current += 1
-        self.log_count += 1
-        if family is None:
-            return
-        register.register_family(family)
-
-    def survivor_born(self, family: Family):
-        if family.is_reproducible() is False:
-            return False
-        child = family.create_child(f'Child {self.log_count}', self.year)
-        self.survivor_record(child, family)
-        return True
-
-    def survivor_fallen(self, survivor: Survivor):
-        self.survivors.pop(survivor)
-        self.matcher.remove(survivor)
-        self.population_current += -1
-
     def evaluate(self):
-        survivors = self.get_survivors()
+        survivors = self.population.survivors
         points = list(stats.points for stats in survivors)
         scores = self.observer.evaluate(points)
         scores.worst += -1
