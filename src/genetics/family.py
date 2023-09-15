@@ -1,8 +1,11 @@
 import random
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
 
 Gen = Tuple[float, ...]
 Genes = Dict[str, Gen]
+
+MemberSet = Set['Member']
+RelationTree = Dict[int, MemberSet]
 
 
 class Genetics:
@@ -88,6 +91,21 @@ class Member(Entity):
     def as_dict(self):
         exclude = (self.families, self.origin, self.genetics)
         return {k: v for k, v in self.__dict__.items() if v not in exclude}
+
+
+class Relationship:
+    def __init__(self, member: Member):
+        self.descendants: RelationTree = {}
+        self.ascendants: RelationTree = {}
+        self.relatives: RelationTree = {}
+        self.__update_relations(member)
+
+    def __update_relations(self, member: Member):
+        family = member.origin
+        if family is None:
+            return
+        self.relatives[0] = {child for child in family.children if child is not self}
+        self.ascendants[0] = {family.parent_a, family.parent_b}
 
 
 class Family:

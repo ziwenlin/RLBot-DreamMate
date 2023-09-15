@@ -29,21 +29,21 @@ class TestTemplate(TestCase):
             mocked_random.return_value = 0.5
             genetics = self.template.generate()
 
-        self.assertEqual(genetics.genes_a, {'foo': (0.0, 0.0), 'bar': (0.0, 0.0, 0.0)})
-        self.assertEqual(genetics.genes_b, {'foo': (0.0, 0.0), 'bar': (0.0, 0.0, 0.0)})
+        self.assertEqual({'foo': (0.0, 0.0), 'bar': (0.0, 0.0, 0.0)}, genetics.genes_a)
+        self.assertEqual({'foo': (0.0, 0.0), 'bar': (0.0, 0.0, 0.0)}, genetics.genes_b)
 
     def test_generate_genetics_2(self):
         with patch('random.random') as mocked_random:
             mocked_random.return_value = 1.0
             genetics = self.template.generate()
 
-        self.assertEqual(genetics.genes_a, {'foo': (0.5, 0.5), 'bar': (0.5, 0.5, 0.5)})
-        self.assertEqual(genetics.genes_b, {'foo': (0.5, 0.5), 'bar': (0.5, 0.5, 0.5)})
+        self.assertEqual({'foo': (0.5, 0.5), 'bar': (0.5, 0.5, 0.5)}, genetics.genes_a)
+        self.assertEqual({'foo': (0.5, 0.5), 'bar': (0.5, 0.5, 0.5)}, genetics.genes_b)
 
     def test_generate_genetics_3(self):
         with patch('random.random') as mocked_random:
             mocked_random.return_value = 0.0
             genetics = self.template.generate()
 
-        self.assertEqual(genetics.genes_a, {'foo': ((-0.5), (-0.5)), 'bar': ((-0.5), (-0.5), (-0.5))})
-        self.assertEqual(genetics.genes_b, {'foo': ((-0.5), (-0.5)), 'bar': ((-0.5), (-0.5), (-0.5))})
+        self.assertEqual({'foo': (-0.5, -0.5), 'bar': (-0.5, -0.5, -0.5)}, genetics.genes_a)
+        self.assertEqual({'foo': (-0.5, -0.5), 'bar': (-0.5, -0.5, -0.5)}, genetics.genes_b)
