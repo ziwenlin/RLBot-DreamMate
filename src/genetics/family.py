@@ -63,6 +63,8 @@ class Entity:
         self.genetics = genetics
 
     def step(self, alive: bool):
+        if self.alive is False:
+            return
         if alive is False:
             self.alive = False
             return

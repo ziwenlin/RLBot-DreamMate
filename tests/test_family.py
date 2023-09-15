@@ -39,6 +39,37 @@ class TestGenetics(TestCase):
         self.assertEqual({'foo': (4, 5, 6), 'bar': (1, 1, 1), 'foobar': (3, 2, 1)}, genes)
 
 
+class TestEntity(TestCase):
+    def setUp(self):
+        random.seed(0)
+        template = CustomTemplate()
+        self.foo = Entity('Foo', 0, template.generate())
+        self.bar = Entity('Bar', 1, template.generate())
+
+    def test_as_dict(self):
+        self.assertEqual({'name': 'Foo', 'age': 0, 'year': 0, 'alive': True}, self.foo.as_dict())
+        self.assertEqual({'name': 'Bar', 'age': 0, 'year': 1, 'alive': True}, self.bar.as_dict())
+
+    def test_step(self):
+        self.foo.step(True)
+        self.assertEqual({'name': 'Foo', 'age': 1, 'year': 0, 'alive': True}, self.foo.as_dict())
+        self.bar.step(False)
+        self.assertEqual({'name': 'Bar', 'age': 0, 'year': 1, 'alive': False}, self.bar.as_dict())
+
+    def test_step_while_dead(self):
+        self.foo.step(False)
+        self.foo.step(True)
+        self.assertFalse(self.foo.is_alive(), 'Foo should be dead')
+        self.assertEqual(0, self.foo.age, 'Foo should not age when he is dead')
+        self.assertEqual(0, self.foo.year, 'Foo birth year should not change')
+
+    def test_is_alive(self):
+        self.foo.step(True)
+        self.bar.step(False)
+        self.assertTrue(self.foo.is_alive(), 'Foo should be alive')
+        self.assertFalse(self.bar.is_alive(), 'Bar should be dead')
+
+
 class TestTemplate(TestCase):
     def setUp(self):
         self.template = CustomTemplate()
