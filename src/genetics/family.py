@@ -110,6 +110,15 @@ class Relationship:
         self.ascendants[0] = {family.parent_a, family.parent_b}
         self.__set_ascendants(family.parent_a)
         self.__set_ascendants(family.parent_b)
+        self.__update_ancestors(member)
+
+    def __update_ancestors(self, member: Member):
+        # Adding descendant in all ancestors
+        for generation, ancestor_group in self.ascendants.items():
+            for ancestor in ancestor_group:
+                if type(ancestor) is Member:
+                    ancestor_ = ancestor.relationships
+                    ancestor_.__update_relation_member(ancestor_.descendants, generation, member)
 
     def __set_ascendants(self, parent: Member):
         if type(parent) is not Member:
@@ -123,6 +132,12 @@ class Relationship:
         if generation not in relation_tree:
             relation_tree[generation] = set()
         relation_tree[generation].update(member_set)
+
+    @staticmethod
+    def __update_relation_member(relation_tree: RelationTree, generation: int, member: Member):
+        if generation not in relation_tree:
+            relation_tree[generation] = set()
+        relation_tree[generation].add(member)
 
 
 class Family:
