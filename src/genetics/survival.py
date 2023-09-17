@@ -3,11 +3,11 @@ from typing import Dict, List, Optional
 
 import numpy
 
-from genetics.family import Entity, Family, Template, Genetics
+from genetics.family import Member, Family, Template, Genetics
 
 
 class Survivor:
-    def __init__(self, entity: Entity):
+    def __init__(self, entity: Member):
         self.entity = entity
         self.points = 0.0
         self.score = 0.0
@@ -63,26 +63,26 @@ class Register:
 
 class Archive:
     def __init__(self):
-        self.survivor_log: Dict[Entity, Survivor] = {}
+        self.survivor_log: Dict[Member, Survivor] = {}
         self.register_log: Dict[Survivor, Register] = {}
 
     def create_record(self, survivor: Survivor, archive: Register):
         self.survivor_log[survivor.entity] = survivor
         self.register_log[survivor] = archive
 
-    def get_archive(self, entity: Entity):
+    def get_archive(self, entity: Member):
         survivor = self.survivor_log.get(entity)
         archive = self.register_log.get(survivor)
         return archive
 
-    def get_survivor(self, entity: Entity):
+    def get_survivor(self, entity: Member):
         return self.survivor_log.get(entity)
 
-    def get_origin(self, entity: Entity):
+    def get_origin(self, entity: Member):
         archive = self.get_archive(entity)
         return archive.origin
 
-    def get_family(self, entity: Entity):
+    def get_family(self, entity: Member):
         archive = self.get_archive(entity)
         return archive.current_family
 
@@ -188,7 +188,7 @@ class Population:
         self.population_max = population_max
         self.log_count = 0
 
-    def survivor_record(self, entity: Entity, family: Optional[Family] = None):
+    def survivor_record(self, entity: Member, family: Optional[Family] = None):
         survivor = Survivor(entity)
         register = Register(survivor)
         self.survivors.append(survivor)
@@ -201,7 +201,7 @@ class Population:
         register.register_family(family)
 
     def survivor_generate(self, year: int, genetics: Genetics):
-        entity = Entity(f'Entity {self.log_count}', year, genetics)
+        entity = Member(f'Entity {self.log_count}', year, genetics)
         self.survivor_record(entity)
 
     def survivor_born(self, year: int, family: Family):
