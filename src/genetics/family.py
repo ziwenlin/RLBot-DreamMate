@@ -100,14 +100,29 @@ class Relationship:
         self.descendants: RelationTree = {}
         self.ascendants: RelationTree = {}
         self.relatives: RelationTree = {}
-        self.__update_relations(member)
+        self.__init_relations(member)
 
-    def __update_relations(self, member: Member):
+    def __init_relations(self, member: Member):
         family = member.origin
         if family is None:
             return
         self.relatives[0] = {child for child in family.children if child is not self}
         self.ascendants[0] = {family.parent_a, family.parent_b}
+        self.__set_ascendants(family.parent_a)
+        self.__set_ascendants(family.parent_b)
+
+    def __set_ascendants(self, parent: Member):
+        if type(parent) is not Member:
+            return
+        # Copy ascendants from parent
+        for generation, ascendants in parent.relationships.ascendants.items():
+            self.__update_relation_tree(self.ascendants, generation + 1, ascendants)
+
+    @staticmethod
+    def __update_relation_tree(relation_tree: RelationTree, generation: int, member_set: MemberSet):
+        if generation not in relation_tree:
+            relation_tree[generation] = set()
+        relation_tree[generation].update(member_set)
 
 
 class Family:
