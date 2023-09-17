@@ -111,6 +111,15 @@ class Relationship:
         self.__set_ascendants(family.parent_a)
         self.__set_ascendants(family.parent_b)
         self.__update_ancestors(member)
+        self.__update_relatives(member)
+
+    def __update_relatives(self, member: Member):
+        # Adding relatives to all relatives (ancestors siblings)
+        for generation, relative_group in self.relatives.items():
+            for relative in relative_group:
+                if type(relative) is Member:
+                    relative_ = relative.relationships
+                    relative_.__update_relation_member(relative_.relatives, -generation, member)
 
     def __update_ancestors(self, member: Member):
         # Adding descendant in all ancestors
@@ -126,6 +135,9 @@ class Relationship:
         # Copy ascendants from parent
         for generation, ascendants in parent.relationships.ascendants.items():
             self.__update_relation_tree(self.ascendants, generation + 1, ascendants)
+        # Copy relatives from parent
+        for generation, relatives in parent.relationships.relatives.items():
+            self.__update_relation_tree(self.relatives, generation + 1, relatives)
 
     @staticmethod
     def __update_relation_tree(relation_tree: RelationTree, generation: int, member_set: MemberSet):
