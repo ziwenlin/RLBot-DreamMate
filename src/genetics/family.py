@@ -87,12 +87,13 @@ class Member(Entity):
         super().__init__(name, year, genetics)
         self.origin: Optional[Family] = family
         self.families: List[Family] = []
+        self.relationships = Relationship(self)
 
     def add_family(self, family: 'Family'):
         self.families.append(family)
 
     def as_dict(self):
-        exclude = (self.families, self.origin, self.genetics)
+        exclude = (self.families, self.origin, self.genetics, self.relationships)
         return {k: v for k, v in self.__dict__.items() if v not in exclude}
 
 
@@ -161,6 +162,8 @@ class Family:
         self.parent_a: Member = parent_a
         self.parent_b: Member = parent_b
         self.children: List[Member] = []
+        parent_a.add_family(self)
+        parent_b.add_family(self)
 
     def create_child(self, name, year):
         genetics_a = self.parent_a.genetics.get_mutated_crossover_genes()
