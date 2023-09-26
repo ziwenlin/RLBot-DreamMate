@@ -78,7 +78,8 @@ class Entity:
         return {k: v for k, v in self.__dict__.items() if v not in exclude}
 
     def __repr__(self):
-        return str(self.as_dict())
+        alive = 'Yes' if self.alive else 'No'
+        return f'{self.name:<12} Birth:{self.year:<3} Age:{self.age:<2} Alive:{alive}'
 
 
 class Member(Entity):
@@ -151,6 +152,9 @@ class Relationship:
             relation_tree[generation] = set()
         relation_tree[generation].add(member)
 
+    def __repr__(self):
+        return f'Ascendants:{len(self.ascendants)} Relatives:{len(self.relatives)} Descendants:{len(self.descendants)}'
+
 
 class Family:
     def __init__(self, parent_a: Member, parent_b: Member):
@@ -197,6 +201,9 @@ class Family:
 
     def is_family_alive(self):
         return self.is_partner_alive() or self.is_children_alive()
+
+    def __repr__(self):
+        return self.parent_a.name + ' x ' + self.parent_b.name
 
 
 class Template:

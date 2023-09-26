@@ -29,8 +29,9 @@ class Survivor:
         self.score = score
 
     def __repr__(self):
-        return str({k: round(v, 2) if type(v) is float else v
-                    for k, v in self.__dict__.items()})
+        alive = 'Yes' if self.alive else 'No'
+        return f'{str(self.entity):<40} Points:{self.points:.1f} Score:{self.score:.2f} ' \
+               f'Vitality:{self.vitality:.2f} Survive:{alive}'
 
 
 class Register:
