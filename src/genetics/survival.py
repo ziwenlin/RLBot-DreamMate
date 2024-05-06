@@ -165,6 +165,17 @@ class Observer:
         self.history: List[List[Survivor]] = []
         self.scores: List[Scores] = []
 
+    def progression(self):
+        # Attempt programming progression
+        # This function is not done
+        try:
+            current = self.scores[-1]
+            previous = self.scores[-2]
+        except IndexError:
+            return 0
+        performance = current - previous
+        return (performance.average - performance.worst) / (performance.median - performance.worst)
+
     def evaluate(self, points: List[float]):
         scores = Scores()
 

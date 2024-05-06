@@ -104,6 +104,31 @@ class Relationship:
         self.relatives: RelationTree = {}
         self.__init_relations(member)
 
+    def is_family(self, entity: Member, depth=5):
+        # Checks if an entity is a family member
+        # This function is not done
+        if depth < 0:
+            return False
+        for descendants in self.descendants.values():
+            if entity in descendants:
+                return True
+        for ascendants in self.ascendants.values():
+            if entity in ascendants:
+                return True
+        if self.is_relative(entity, depth):
+            return True
+        return False
+
+    def is_relative(self, entity: Member, depth):
+        # Checks if an entity is a relative
+        # This function is not done
+        if depth < 0:
+            return False
+        if depth in self.relatives:
+            if entity in self.relatives[depth]:
+                return True
+        return self.is_relative(entity, depth - 1)
+
     def __init_relations(self, member: Member):
         family = member.origin
         if family is None:
