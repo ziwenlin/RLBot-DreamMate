@@ -22,6 +22,7 @@ class ServerHandler(Logger):
 
     def receive_message(self, client: socket.socket):
         if self.running.is_set() is False:
+            self.logging(f'[Connection] Host server is closing')
             return ''
         message = client.recv(1024).decode(FORMAT)
         return message
@@ -34,25 +35,40 @@ class ServerHandler(Logger):
             read_sockets, _, _ = select.select(self.sockets_list, [], [], 5.0)
             for notified_socket in read_sockets:
                 if notified_socket == self.server:
-                    # Client connection accepted
-                    client, address = self.server.accept()
-                    self.sockets_list.append(client)
-                    self.clients_info[client] = address
-                    self.logging(f'[Connection] Accepted client handler at address {address[1]}')
+                    # Accept client socket connection
+                    self.accept_client()
                 else:
-                    message = self.receive_message(notified_socket)
-                    address = self.clients_info[notified_socket]
-                    if message == False or message == '':
-                        # Client connection closed
-                        self.sockets_list.remove(notified_socket)
-                        del self.clients_info[notified_socket]
-                        # self.logging(f'Message is false: {message == False}')
-                        # self.logging(f'Message is empty: {message == ""}')
-                        self.logging(f'[Connection] Closed client handler at address {address[1]}')
-                        continue
-                    self.logging(f'[Message] [{address[1]}] > --- {message} ---')
+                    # Read client connection message
+                    self.read_client(notified_socket)
         self.server.close()
         self.logging('Host server closed')
+
+    def accept_client(self):
+        # New incoming socket connection
+        client, address = self.server.accept()
+        self.sockets_list.append(client)
+        self.clients_info[client] = address
+        self.logging(f'[Connection] Accepted client handler at address {address[1]}')
+
+    def read_client(self, client_socket: socket.socket):
+        # New incoming message from socket connection
+        message = self.receive_message(client_socket)
+        address = self.clients_info[client_socket]
+        if message == False or message == '':
+            # Client have sent an empty message
+            self.close_client(client_socket)
+            return
+        self.logging(f'[Message] [{address[1]}] > --- {message} ---')
+
+    def close_client(self, client_socket: socket.socket):
+        # Closing client socket connection
+        self.sockets_list.remove(client_socket)
+        address = self.clients_info[client_socket][1]
+        del self.clients_info[client_socket]
+        client_socket.close()
+        # self.logging(f'Message is false: {message == False}')
+        # self.logging(f'Message is empty: {message == ""}')
+        self.logging(f'[Connection] Closed client handler at address {address}')
 
     def stop(self):
         self.logging('Stopping host server')
