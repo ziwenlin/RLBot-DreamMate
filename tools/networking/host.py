@@ -8,7 +8,7 @@ import select
 
 from networking.client import MessengerSender
 from networking.logger import Logger
-from networking.protocol import ADDRESS, FORMAT
+from networking.protocol import ADDRESS, FORMAT, HEADER_SIZE
 
 
 class ServerHandler(Logger):
@@ -24,7 +24,7 @@ class ServerHandler(Logger):
         if self.running.is_set() is False:
             self.logging(f'[Connection] Host server is closing')
             return ''
-        message = client.recv(1024).decode(FORMAT)
+        message = client.recv(HEADER_SIZE).decode(FORMAT)
         return message
 
     def run(self) -> None:
@@ -48,7 +48,7 @@ class ServerHandler(Logger):
         client, address = self.server.accept()
         self.sockets_list.append(client)
         self.clients_info[client] = address
-        self.logging(f'[Connection] Accepted client handler at address {address[1]}')
+        self.logging(f'[Connection] [Success] [{address[1]}] Accepted client handler')
 
     def read_client(self, client_socket: socket.socket):
         # New incoming message from socket connection
@@ -58,7 +58,7 @@ class ServerHandler(Logger):
             # Client have sent an empty message
             self.close_client(client_socket)
             return
-        self.logging(f'[Message] [{address[1]}] > --- {message} ---')
+        self.logging(f'[Connection] [Message] [{address[1]}] > --- {message} ---')
 
     def close_client(self, client_socket: socket.socket):
         # Closing client socket connection
