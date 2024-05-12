@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 
 import select
 
-from networking.client import MessengerSender
+from networking.client import ClientHandler
 from networking.logger import Logger
 from networking.protocol import ADDRESS, FORMAT, HEADER_SIZE
 
@@ -25,6 +25,14 @@ class ServerHandler(Logger):
             self.logging(f'[Connection] Host server is closing')
             return ''
         message = client.recv(HEADER_SIZE).decode(FORMAT)
+        if message == '':
+            return ''
+        try:
+            message_length = int(message)
+        except ValueError as error:
+            self.logging(f'[Connection] [Error] Received message --- {message} --- {error} ---')
+            return ''
+        message = client.recv(message_length).decode(FORMAT)
         return message
 
     def run(self) -> None:
@@ -93,15 +101,11 @@ def main():
     server.start()
 
     try:
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
-        MessengerSender().start()
+        ClientHandler().start()
+        ClientHandler().start()
+        ClientHandler().start()
+        ClientHandler().start()
+        ClientHandler().start()
     except Exception as e:
         print('[Main] ' + str(e))
 
