@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 
 import select
 
-import networking.protocol as config
+import networking.configuration as config
 from networking.logger import Logger
 
 
