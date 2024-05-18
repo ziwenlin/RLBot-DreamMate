@@ -1,7 +1,43 @@
 import socket
+from queue import Queue
+from typing import List
 
 import networking.configuration as config
 from networking.logger import SimpleLogger
+
+
+class MultiQueue:
+    def __init__(self):
+        self.queue_input: List[Queue] = []
+        self.queue_output: List[Queue] = []
+
+    def create_output_queue(self):
+        queue = Queue()
+        self.queue_output.append(queue)
+        return queue
+
+    def create_input_queue(self):
+        queue = Queue()
+        self.queue_input.append(queue)
+        return queue
+
+    # def remove_output_queue(self, queue: Queue):
+    #     self.queue_output.remove(queue)
+    #
+    # def remove_input_queue(self, queue: Queue):
+    #     self.queue_input.remove(queue)
+
+    def put(self, item):
+        for queue in self.queue_output:
+            queue.put(item)
+
+    def get(self):
+        items = []
+        for queue in self.queue_input:
+            if queue.empty():
+                continue
+            items.append(queue.get())
+        return items
 
 
 class MessageHandler:
