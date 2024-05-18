@@ -4,7 +4,7 @@ import time
 import tkinter as tk
 
 from networking.client import ClientHandler
-from networking.host import ServerHandler
+from networking.server import ServerHandler
 from rendering.graph import Graph
 
 
