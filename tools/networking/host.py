@@ -1,4 +1,3 @@
-import logging
 import socket
 import threading
 import time
@@ -7,7 +6,6 @@ from typing import Dict, Tuple
 import select
 
 import networking.protocol as config
-from networking.client import ClientHandler
 from networking.logger import Logger
 
 
@@ -106,31 +104,3 @@ class ServerHandler(Logger):
             self.logging('Forcing host server to close')
             self.server.close()
         self.logging('Shutdown completed')
-
-
-def main():
-    logger = logging.getLogger(__name__)
-    server = ServerHandler()
-    server.start()
-
-    client_list = []
-    try:
-        for _ in range(10):
-            client = ClientHandler()
-            client.start()
-            client_list.append(client)
-    except Exception as e:
-        logger.warning('[Main] ' + str(e))
-
-    time.sleep(5)
-    server.stop()
-
-    for client in client_list:
-        while client.is_alive():
-            time.sleep(1)
-    while server.is_alive():
-        time.sleep(1)
-
-
-if __name__ == '__main__':
-    main()
