@@ -22,7 +22,7 @@ class ServerHandler(Logger):
 
     def receive_message(self, client: socket.socket):
         if self.running.is_set() is False:
-            self.logging(f'[Connection] Host server is closing')
+            self.logging(f'[Connection] [Error] Host server is closing')
             return ''
         message = client.recv(HEADER_SIZE).decode(FORMAT)
         if message == '':
@@ -56,17 +56,17 @@ class ServerHandler(Logger):
         client, address = self.server.accept()
         self.sockets_list.append(client)
         self.clients_info[client] = address
-        self.logging(f'[Connection] [Success] [{address[1]}] Accepted client handler')
+        self.logging(f'[{address[1]}] [Success] Accepted client handler')
 
     def read_client(self, client_socket: socket.socket):
         # New incoming message from socket connection
         message = self.receive_message(client_socket)
         address = self.clients_info[client_socket]
-        if message == False or message == '':
+        if message is False or message == '':
             # Client have sent an empty message
             self.close_client(client_socket)
             return
-        self.logging(f'[Connection] [Message] [{address[1]}] > --- {message} ---')
+        self.logging(f'[{address[1]}] [Message] <<< --- {message} ---')
 
     def close_client(self, client_socket: socket.socket):
         # Closing client socket connection
