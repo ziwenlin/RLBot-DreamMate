@@ -1,3 +1,4 @@
+import select
 import socket
 import threading
 
@@ -13,12 +14,17 @@ class ClientHandler(Logger):
         self.running = threading.Event()
 
     def run(self) -> None:
+        clients = [self.client]
         self.logging('Starting client')
         self.running.set()
         self.connect()
         self.logging(f'Connected to port {PORT}')
         self.transmit_message(f'Hello World! from [{self.name}]')
-        self.disconnect()
+        while self.running.is_set():
+            readable, _, _ = select.select(clients, [], [], 0.5)
+            for notified_socket in readable:
+                if notified_socket == self.client:
+                    self.read_client()
         self.client.close()
         self.logging('Client shutdown')
 
