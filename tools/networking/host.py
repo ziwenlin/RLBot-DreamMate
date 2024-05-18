@@ -7,6 +7,7 @@ import select
 
 import networking.configuration as config
 from networking.logger import Logger
+from networking.protocol import MessageHandler
 
 
 class ServerHandler(Logger):
@@ -16,29 +17,8 @@ class ServerHandler(Logger):
         self.server.bind(config.ADDRESS)
         self.running = threading.Event()
         self.sockets_list = [self.server]
+        self.clients_handler: Dict[socket.socket, MessageHandler] = {}
         self.clients_info: Dict[socket.socket, Tuple[str, int]] = {}
-
-    def receive_message(self, client: socket.socket):
-        if self.running.is_set() is False:
-            self.logging(f'[Connection] [Error] Host server is closing')
-            return ''
-        message = client.recv(config.HEADER_SIZE).decode(config.FORMAT)
-        if message == '':
-            return ''
-        try:
-            message_length = int(message)
-        except ValueError as error:
-            self.logging(f'[Connection] [Error] Received message --- {message} --- {error} ---')
-            return ''
-        message = client.recv(message_length).decode(config.FORMAT)
-        return message
-
-    def transmit_message(self, client, message):
-        message_length = len(message)
-        full_message = f'{message_length:<{config.HEADER_SIZE}}' + message
-        client.send(full_message.encode(config.FORMAT))
-        address = self.clients_info[client][1]
-        self.logging(f'[{address}] [Message] >>> --- {message} ---')
 
     def run(self) -> None:
         self.logging('Starting host server')
@@ -56,7 +36,7 @@ class ServerHandler(Logger):
         for client in self.sockets_list:
             if client == self.server:
                 continue
-            self.transmit_message(client, config.DISCONNECT_MESSAGE)
+            self.clients_handler[client].transmit_message(config.DISCONNECT_MESSAGE)
             client.close()
         self.server.close()
         self.logging('Host server closed')
@@ -66,17 +46,15 @@ class ServerHandler(Logger):
         client, address = self.server.accept()
         self.sockets_list.append(client)
         self.clients_info[client] = address
+        self.clients_handler[client] = MessageHandler(client, f'[Server] [{address[1]}]')
         self.logging(f'[{address[1]}] [Success] Accepted client handler')
 
     def read_client(self, client_socket: socket.socket):
         # New incoming message from socket connection
-        message = self.receive_message(client_socket)
-        address = self.clients_info[client_socket]
+        message = self.clients_handler[client_socket].receive_message()
         if message is False or message == '':
             # Client have sent an empty message
             self.close_client(client_socket)
-            return
-        self.logging(f'[{address[1]}] [Message] <<< --- {message} ---')
         if message == config.DISCONNECT_MESSAGE:
             self.close_client(client_socket)
 
