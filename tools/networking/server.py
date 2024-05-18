@@ -6,22 +6,23 @@ from typing import Dict, Tuple
 import select
 
 import networking.configuration as config
-from networking.logger import Logger
+from networking.logger import SimpleLogger
 from networking.protocol import MessageHandler
 
 
-class ServerHandler(Logger):
+class ServerHandler(threading.Thread):
     def __init__(self):
-        super().__init__('[Server] ')
+        super().__init__(name='[Server]')
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind(config.ADDRESS)
+        self.logger = SimpleLogger('[Server]')
         self.running = threading.Event()
         self.sockets_list = [self.server]
         self.clients_handler: Dict[socket.socket, MessageHandler] = {}
         self.clients_info: Dict[socket.socket, Tuple[str, int]] = {}
 
     def run(self) -> None:
-        self.logging('Starting host server')
+        self.logger.log_debug('Starting host server')
         self.server.listen(5)
         self.running.set()
         while self.running.is_set():
@@ -39,7 +40,7 @@ class ServerHandler(Logger):
             self.clients_handler[client].transmit_message(config.DISCONNECT_MESSAGE)
             client.close()
         self.server.close()
-        self.logging('Host server closed')
+        self.logger.log_debug('Host server closed')
 
     def accept_client(self):
         # New incoming socket connection
@@ -47,7 +48,7 @@ class ServerHandler(Logger):
         self.sockets_list.append(client)
         self.clients_info[client] = address
         self.clients_handler[client] = MessageHandler(client, f'[Server] [{address[1]}]')
-        self.logging(f'[{address[1]}] [Success] Accepted client handler')
+        self.logger.log_info(f'[{address[1]}] [Success] Accepted client handler')
 
     def read_client(self, client_socket: socket.socket):
         # New incoming message from socket connection
@@ -66,10 +67,10 @@ class ServerHandler(Logger):
         client_socket.close()
         # self.logging(f'Message is false: {message == False}')
         # self.logging(f'Message is empty: {message == ""}')
-        self.logging(f'[Connection] Closed client handler at address {address}')
+        self.logger.log_info(f'[Connection] Closed client handler at address {address}')
 
     def stop(self):
-        self.logging('Stopping host server')
+        self.logger.log_debug('Stopping host server')
         self.running.clear()
         for count in range(100):
             # Waiting for host server to close itself
@@ -79,6 +80,6 @@ class ServerHandler(Logger):
             break
         else:
             # Host server did not respond in 10 seconds
-            self.logging('Forcing host server to close')
+            self.logger.log_debug('Forcing host server to close')
             self.server.close()
-        self.logging('Shutdown completed')
+        self.logger.log_debug('Shutdown completed')
