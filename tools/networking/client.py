@@ -13,11 +13,13 @@ class ClientHandler(Logger):
         self.running = threading.Event()
 
     def run(self) -> None:
+        self.logging('Starting client')
         self.running.set()
         self.connect()
         self.logging(f'Connected to port {PORT}')
         self.transmit_message(f'Hello World! from [{self.name}]')
         self.disconnect()
+        self.logging('Client shutdown')
 
     def disconnect(self):
         self.transmit_message(DISCONNECT_MESSAGE)
@@ -30,9 +32,9 @@ class ClientHandler(Logger):
 
     def transmit_message(self, message: str):
         if self.running.is_set() is False:
-            self.logging(f'[Transmission] [Stopped]--- {message} ---')
+            self.logging(f'[Message] XXX --- {message} ---')
             return
         message_length = len(message)
         full_message = f'{message_length:<{HEADER_SIZE}}' + message
         self.client.send(full_message.encode(FORMAT))
-        self.logging(f'[Transmission] [Success] --- {message} ---')
+        self.logging(f'[Message] >>> --- {message} ---')
