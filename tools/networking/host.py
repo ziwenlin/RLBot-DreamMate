@@ -8,7 +8,7 @@ import select
 
 from networking.client import ClientHandler
 from networking.logger import Logger
-from networking.protocol import ADDRESS, FORMAT, HEADER_SIZE
+from networking.protocol import ADDRESS, FORMAT, HEADER_SIZE, DISCONNECT_MESSAGE
 
 
 class ServerHandler(Logger):
@@ -35,12 +35,19 @@ class ServerHandler(Logger):
         message = client.recv(message_length).decode(FORMAT)
         return message
 
+    def transmit_message(self, client, message):
+        message_length = len(message)
+        full_message = f'{message_length:<{HEADER_SIZE}}' + message
+        client.send(full_message.encode(FORMAT))
+        address = self.clients_info[client][1]
+        self.logging(f'[{address}] [Message] >>> --- {message} ---')
+
     def run(self) -> None:
         self.logging('Starting host server')
         self.server.listen(5)
         self.running.set()
         while self.running.is_set():
-            read_sockets, _, _ = select.select(self.sockets_list, [], [], 5.0)
+            read_sockets, _, _ = select.select(self.sockets_list, [], [], 0.5)
             for notified_socket in read_sockets:
                 if notified_socket == self.server:
                     # Accept client socket connection
@@ -48,6 +55,11 @@ class ServerHandler(Logger):
                 else:
                     # Read client connection message
                     self.read_client(notified_socket)
+        for client in self.sockets_list:
+            if client == self.server:
+                continue
+            self.transmit_message(client, DISCONNECT_MESSAGE)
+            client.close()
         self.server.close()
         self.logging('Host server closed')
 
@@ -67,6 +79,8 @@ class ServerHandler(Logger):
             self.close_client(client_socket)
             return
         self.logging(f'[{address[1]}] [Message] <<< --- {message} ---')
+        if message == DISCONNECT_MESSAGE:
+            self.close_client(client_socket)
 
     def close_client(self, client_socket: socket.socket):
         # Closing client socket connection
