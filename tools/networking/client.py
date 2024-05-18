@@ -19,6 +19,7 @@ class ClientHandler(Logger):
         self.logging(f'Connected to port {PORT}')
         self.transmit_message(f'Hello World! from [{self.name}]')
         self.disconnect()
+        self.client.close()
         self.logging('Client shutdown')
 
     def disconnect(self):
@@ -27,8 +28,31 @@ class ClientHandler(Logger):
         self.client.close()
         self.logging('Connection closed')
 
+    def read_client(self):
+        message = self.receive_message()
+        if message is False or message == '':
+            self.disconnect()
+            return
+        self.logging(f'[Message] <<< --- {message} ---')
+        if message == DISCONNECT_MESSAGE:
+            self.disconnect()
+
     def connect(self):
         self.client.connect(ADDRESS)
+
+    def receive_message(self):
+        if self.running.is_set() is False:
+            return ''
+        message = self.client.recv(HEADER_SIZE).decode(FORMAT)
+        if message == '':
+            return ''
+        try:
+            message_length = int(message)
+        except ValueError as error:
+            self.logging(f'[Message] [Error] --- {error} ---')
+            return ''
+        message = self.client.recv(message_length).decode(FORMAT)
+        return message
 
     def transmit_message(self, message: str):
         if self.running.is_set() is False:
