@@ -96,22 +96,24 @@ class ServerHandler(Logger):
 
 def main():
     logger = logging.getLogger(__name__)
-    logger.info('testing')
     server = ServerHandler()
     server.start()
 
+    client_list = []
     try:
-        ClientHandler().start()
-        ClientHandler().start()
-        ClientHandler().start()
-        ClientHandler().start()
-        ClientHandler().start()
+        for _ in range(10):
+            client = ClientHandler()
+            client.start()
+            client_list.append(client)
     except Exception as e:
-        print('[Main] ' + str(e))
+        logger.warning('[Main] ' + str(e))
 
     time.sleep(5)
     server.stop()
 
+    for client in client_list:
+        while client.is_alive():
+            time.sleep(1)
     while server.is_alive():
         time.sleep(1)
 
