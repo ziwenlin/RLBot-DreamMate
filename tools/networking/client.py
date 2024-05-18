@@ -1,9 +1,10 @@
-import select
 import socket
 import threading
 
+import select
+
+import networking.protocol as config
 from networking.logger import Logger
-from networking.protocol import PORT, ADDRESS, FORMAT, DISCONNECT_MESSAGE, HEADER_SIZE
 
 
 class ClientHandler(Logger):
@@ -18,7 +19,7 @@ class ClientHandler(Logger):
         self.logging('Starting client')
         self.running.set()
         self.connect()
-        self.logging(f'Connected to port {PORT}')
+        self.logging(f'Connected to port {config.PORT}')
         self.transmit_message(f'Hello World! from [{self.name}]')
         while self.running.is_set():
             readable, _, _ = select.select(clients, [], [], 0.5)
@@ -29,7 +30,7 @@ class ClientHandler(Logger):
         self.logging('Client shutdown')
 
     def disconnect(self):
-        self.transmit_message(DISCONNECT_MESSAGE)
+        self.transmit_message(config.DISCONNECT_MESSAGE)
         self.running.clear()
         self.client.close()
         self.logging('Connection closed')
@@ -40,16 +41,16 @@ class ClientHandler(Logger):
             self.disconnect()
             return
         self.logging(f'[Message] <<< --- {message} ---')
-        if message == DISCONNECT_MESSAGE:
+        if message == config.DISCONNECT_MESSAGE:
             self.disconnect()
 
     def connect(self):
-        self.client.connect(ADDRESS)
+        self.client.connect(config.ADDRESS)
 
     def receive_message(self):
         if self.running.is_set() is False:
             return ''
-        message = self.client.recv(HEADER_SIZE).decode(FORMAT)
+        message = self.client.recv(config.HEADER_SIZE).decode(config.FORMAT)
         if message == '':
             return ''
         try:
@@ -57,7 +58,7 @@ class ClientHandler(Logger):
         except ValueError as error:
             self.logging(f'[Message] [Error] --- {error} ---')
             return ''
-        message = self.client.recv(message_length).decode(FORMAT)
+        message = self.client.recv(message_length).decode(config.FORMAT)
         return message
 
     def transmit_message(self, message: str):
@@ -65,6 +66,6 @@ class ClientHandler(Logger):
             self.logging(f'[Message] XXX --- {message} ---')
             return
         message_length = len(message)
-        full_message = f'{message_length:<{HEADER_SIZE}}' + message
-        self.client.send(full_message.encode(FORMAT))
+        full_message = f'{message_length:<{config.HEADER_SIZE}}' + message
+        self.client.send(full_message.encode(config.FORMAT))
         self.logging(f'[Message] >>> --- {message} ---')

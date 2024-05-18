@@ -6,16 +6,16 @@ from typing import Dict, Tuple
 
 import select
 
+import networking.protocol as config
 from networking.client import ClientHandler
 from networking.logger import Logger
-from networking.protocol import ADDRESS, FORMAT, HEADER_SIZE, DISCONNECT_MESSAGE
 
 
 class ServerHandler(Logger):
     def __init__(self):
         super().__init__('[Server] ')
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.bind(ADDRESS)
+        self.server.bind(config.ADDRESS)
         self.running = threading.Event()
         self.sockets_list = [self.server]
         self.clients_info: Dict[socket.socket, Tuple[str, int]] = {}
@@ -24,7 +24,7 @@ class ServerHandler(Logger):
         if self.running.is_set() is False:
             self.logging(f'[Connection] [Error] Host server is closing')
             return ''
-        message = client.recv(HEADER_SIZE).decode(FORMAT)
+        message = client.recv(config.HEADER_SIZE).decode(config.FORMAT)
         if message == '':
             return ''
         try:
@@ -32,13 +32,13 @@ class ServerHandler(Logger):
         except ValueError as error:
             self.logging(f'[Connection] [Error] Received message --- {message} --- {error} ---')
             return ''
-        message = client.recv(message_length).decode(FORMAT)
+        message = client.recv(message_length).decode(config.FORMAT)
         return message
 
     def transmit_message(self, client, message):
         message_length = len(message)
-        full_message = f'{message_length:<{HEADER_SIZE}}' + message
-        client.send(full_message.encode(FORMAT))
+        full_message = f'{message_length:<{config.HEADER_SIZE}}' + message
+        client.send(full_message.encode(config.FORMAT))
         address = self.clients_info[client][1]
         self.logging(f'[{address}] [Message] >>> --- {message} ---')
 
@@ -58,7 +58,7 @@ class ServerHandler(Logger):
         for client in self.sockets_list:
             if client == self.server:
                 continue
-            self.transmit_message(client, DISCONNECT_MESSAGE)
+            self.transmit_message(client, config.DISCONNECT_MESSAGE)
             client.close()
         self.server.close()
         self.logging('Host server closed')
@@ -79,7 +79,7 @@ class ServerHandler(Logger):
             self.close_client(client_socket)
             return
         self.logging(f'[{address[1]}] [Message] <<< --- {message} ---')
-        if message == DISCONNECT_MESSAGE:
+        if message == config.DISCONNECT_MESSAGE:
             self.close_client(client_socket)
 
     def close_client(self, client_socket: socket.socket):
