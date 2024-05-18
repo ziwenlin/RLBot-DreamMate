@@ -19,19 +19,19 @@ class Logger(Thread):
 class SimpleLogger:
     def __init__(self, prefix: str):
         super().__init__()
-        self.prefix = prefix + ' '
-        self.logger = logging.Logger(prefix)
-        self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(logging.INFO)
+        self.__prefix = prefix + ' '
+        self.__logger = logging.Logger(prefix)
+        self.__logger.addHandler(logging.StreamHandler())
+        self.__logger.setLevel(logging.INFO)
 
     def log_debug(self, message: str):
-        self.logger.debug(self.prefix + message)
+        self.__logger.debug(self.__prefix + message)
 
     def log_info(self, message: str):
-        self.logger.info(self.prefix + message)
+        self.__logger.info(self.__prefix + message)
 
     def log_warning(self, message: str):
-        self.logger.warning(self.prefix + message)
+        self.__logger.warning(self.__prefix + message)
 
     def log_error(self, message: str):
-        self.logger.error(self.prefix + message)
+        self.__logger.error(self.__prefix + message)
