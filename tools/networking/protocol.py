@@ -2,6 +2,7 @@ import socket
 
 import networking.configuration as config
 from networking.logger import SimpleLogger
+from networking.queues import SimpleQueue
 
 
 class MessageHandler:
@@ -28,3 +29,35 @@ class MessageHandler:
         full_message = f'{message_length:<{config.HEADER_SIZE}}' + message
         self.socket.send(full_message.encode(config.FORMAT))
         self.logger.log_info(f'[Message] >>> --- {message} ---')
+
+
+class MessageProtocolHandler(MessageHandler):
+    def __init__(self, client: socket.socket, queues: SimpleQueue, name: str):
+        super().__init__(client, name)
+        self.can_read = False
+        self.can_write = False
+        self.has_error = False
+        self.is_running = True
+
+        self.queues = queues.connect()
+
+    def read_message(self):
+        self.can_read = False
+        self.receive_message()
+
+    def write_message(self):
+        message = self.queues.get()
+        if message is None:
+            return
+        self.can_write = False
+        self.transmit_message(message)
+
+    def process_messages(self):
+        if self.is_running is False:
+            self.transmit_message(config.DISCONNECT_MESSAGE)
+            self.socket.close()
+            return
+        if self.can_write is True:
+            self.write_message()
+        if self.can_read is True:
+            self.read_message()
