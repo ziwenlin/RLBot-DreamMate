@@ -3,8 +3,8 @@ import math
 import time
 import tkinter as tk
 
-from networking.client import ClientHandler
-from networking.server import ServerHandler
+from networking.clients import ClientThread
+from networking.servers import ServerThread
 from rendering.graph import Graph
 
 
@@ -37,18 +37,14 @@ def controller(view: Graph):
 
 
 def main():
-    logger = logging.getLogger(__name__)
-    server = ServerHandler()
+    server = ServerThread()
     server.start()
 
     client_list = []
-    try:
-        for _ in range(10):
-            client = ClientHandler()
-            client.start()
-            client_list.append(client)
-    except Exception as e:
-        logger.warning('[Main] ' + str(e))
+    for _ in range(3):
+        client = ClientThread()
+        client.start()
+        client_list.append(client)
 
     root = tk.Tk()
     view = Graph(root)
@@ -56,12 +52,11 @@ def main():
     controller(view)
     root.mainloop()
 
-    server.stop()
     for client in client_list:
-        while client.is_alive():
-            time.sleep(1)
-    while server.is_alive():
-        time.sleep(1)
+        client.stop()
+        client.join()
+    server.stop()
+    server.join(1)
 
 
 if __name__ == '__main__':
