@@ -1,8 +1,9 @@
-import logging
 import math
-import time
 import tkinter as tk
 
+from mvc.controllers.application_window import ApplicationController
+from mvc.models.application_window import ApplicationModel
+from mvc.views.application_window import ApplicationView
 from networking.clients import ClientThread
 from networking.servers import ServerThread
 from rendering.graph import Graph
@@ -59,5 +60,12 @@ def main():
     server.join(1)
 
 
+def main_tk():
+    main_view = ApplicationView()
+    main_model = ApplicationModel()
+    main_controller = ApplicationController(main_view, main_model)
+    main_controller.run()
+
+
 if __name__ == '__main__':
-    main()
+    main_tk()
