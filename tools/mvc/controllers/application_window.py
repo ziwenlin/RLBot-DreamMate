@@ -10,28 +10,40 @@ class ApplicationController:
         self._bind()
 
     def _bind(self):
-        self.view.server_console.button_spawn_client.config(command=self.create_client)
-        self.view.server_console.button_disconnect_all.config(command=self.remove_all_clients)
+        self.view.button_spawn_client.config(command=self.create_client)
+        self.view.button_spawn_server.config(command=self.create_server)
 
     def _bind_client(self, name: str):
         client = self.view.clients[name]
-        client.button_disconnect.config(command=lambda: self.view.remove_client(name))
+        client.button_close_client.config(command=lambda: self.view.remove_client(name))
+
+    def _bind_server(self, name: str):
+        server = self.view.servers[name]
+        server.button_close_server.config(command=lambda: self.view.remove_server(name))
 
     def run(self):
         self.view.root.mainloop()
 
+    def create_server(self):
+        servers = self.view.servers
+        name = 'Server'
+        for index in range(10):
+            name_indexed = f'{name} {index + 1}'
+            if name_indexed in servers:
+                continue
+            name = name_indexed
+            break
+        self.view.spawn_server(name)
+        self._bind_server(name)
+
     def create_client(self):
         clients = self.view.clients
-        name = 'test'
+        name = 'Client'
         for index in range(10):
-            name_indexed = name + str(index)
+            name_indexed = f'{name} {index + 1}'
             if name_indexed in clients:
                 continue
             name = name_indexed
             break
-        self.view.create_client(name)
+        self.view.spawn_client(name)
         self._bind_client(name)
-
-    def remove_all_clients(self):
-        for name in list(self.view.clients.keys()):
-            self.view.remove_client(name)
