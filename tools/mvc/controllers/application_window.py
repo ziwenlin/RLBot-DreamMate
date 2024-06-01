@@ -1,3 +1,5 @@
+from typing import Dict
+
 from mvc.models.application_window import ApplicationModel
 from mvc.views.application_window import ApplicationView
 
@@ -21,25 +23,22 @@ class ApplicationController:
         self.view.root.mainloop()
 
     def create_server(self):
-        consoles = self.view.consoles
-        name = 'Server'
-        for index in range(10):
-            name_indexed = f'{name} {index + 1}'
-            if name_indexed in consoles:
-                continue
-            name = name_indexed
-            break
+        name = self._create_unique_console_name('Server')
         self.view.spawn_console(name)
         self._bind_console(name)
 
     def create_client(self):
+        name = self._create_unique_console_name('Client')
+        self.view.spawn_console(name)
+        self._bind_console(name)
+
+    def _create_unique_console_name(self, name: str):
         consoles = self.view.consoles
-        name = 'Client'
+        if name not in consoles:
+            return name
         for index in range(10):
             name_indexed = f'{name} {index + 1}'
             if name_indexed in consoles:
                 continue
-            name = name_indexed
-            break
-        self.view.spawn_console(name)
-        self._bind_console(name)
+            return name_indexed
+        return name
