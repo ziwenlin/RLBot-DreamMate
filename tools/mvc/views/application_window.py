@@ -2,8 +2,6 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from typing import Dict
 
-from mvc.views.client_console import ClientConsoleView
-from mvc.views.server_console import ServerConsoleView
 from mvc.views.notebook_console import NotebookConsoleView
 from mvc.views.view_style import GRID_CNF, PADDING_CNF
 
@@ -44,8 +42,6 @@ class ApplicationView:
         self.button_spawn_client = tk.Button(self.frame_settings, text='Spawn Client')
         self.button_spawn_client.grid(GRID_CNF, row=3, column=2)
 
-        self.clients: Dict[str, ClientConsoleView] = {}
-        self.servers: Dict[str, ServerConsoleView] = {}
         self.consoles: Dict[str, NotebookConsoleView] = {}
 
     def remove_console(self, name: str):
@@ -64,37 +60,3 @@ class ApplicationView:
         self.notebook.add(console.frame, text=name)
         self.consoles[name] = console
         return console
-
-    def remove_server(self, name: str):
-        if name not in self.clients:
-            print(f'{name} does not exist')
-            return
-        server = self.servers.pop(name)
-        self.notebook.forget(server.frame)
-        return server
-
-    def spawn_server(self, name: str):
-        if name in self.servers:
-            print(f'{name} already exists')
-            return
-        server = ServerConsoleView(self.notebook)
-        self.notebook.add(server.frame, text=name)
-        self.servers[name] = server
-        return server
-
-    def remove_client(self, name: str):
-        if name not in self.clients:
-            print(f'{name} does not exist')
-            return
-        client = self.clients.pop(name)
-        self.notebook.forget(client.frame)
-        return client
-
-    def spawn_client(self, name: str):
-        if name in self.clients:
-            print(f'{name} already exists')
-            return
-        client = ClientConsoleView(self.notebook)
-        self.notebook.add(client.frame, text=name)
-        self.clients[name] = client
-        return client
