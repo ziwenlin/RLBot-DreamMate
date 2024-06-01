@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from mvc.views.application_window import PADDING_CNF, GRID_CNF
+from mvc.views.view_style import GRID_CNF, PADDING_CNF
 
 
 class ClientConsoleView:
