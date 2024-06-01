@@ -13,37 +13,33 @@ class ApplicationController:
         self.view.button_spawn_client.config(command=self.create_client)
         self.view.button_spawn_server.config(command=self.create_server)
 
-    def _bind_client(self, name: str):
-        client = self.view.clients[name]
-        client.button_close_client.config(command=lambda: self.view.remove_client(name))
-
-    def _bind_server(self, name: str):
-        server = self.view.servers[name]
-        server.button_close_server.config(command=lambda: self.view.remove_server(name))
+    def _bind_console(self, name: str):
+        console = self.view.consoles[name]
+        console.button_close.config(command=lambda: self.view.remove_console(name))
 
     def run(self):
         self.view.root.mainloop()
 
     def create_server(self):
-        servers = self.view.servers
+        consoles = self.view.consoles
         name = 'Server'
         for index in range(10):
             name_indexed = f'{name} {index + 1}'
-            if name_indexed in servers:
+            if name_indexed in consoles:
                 continue
             name = name_indexed
             break
-        self.view.spawn_server(name)
-        self._bind_server(name)
+        self.view.spawn_console(name)
+        self._bind_console(name)
 
     def create_client(self):
-        clients = self.view.clients
+        consoles = self.view.consoles
         name = 'Client'
         for index in range(10):
             name_indexed = f'{name} {index + 1}'
-            if name_indexed in clients:
+            if name_indexed in consoles:
                 continue
             name = name_indexed
             break
-        self.view.spawn_client(name)
-        self._bind_client(name)
+        self.view.spawn_console(name)
+        self._bind_console(name)

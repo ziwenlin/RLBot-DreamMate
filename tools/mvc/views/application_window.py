@@ -4,6 +4,7 @@ from typing import Dict
 
 from mvc.views.client_console import ClientConsoleView
 from mvc.views.server_console import ServerConsoleView
+from mvc.views.notebook_console import NotebookConsoleView
 from mvc.views.view_style import GRID_CNF, PADDING_CNF
 
 
@@ -45,6 +46,24 @@ class ApplicationView:
 
         self.clients: Dict[str, ClientConsoleView] = {}
         self.servers: Dict[str, ServerConsoleView] = {}
+        self.consoles: Dict[str, NotebookConsoleView] = {}
+
+    def remove_console(self, name: str):
+        if name not in self.consoles:
+            print(f'{name} does not exist')
+            return
+        console = self.consoles.pop(name)
+        self.notebook.forget(console.frame)
+        return console
+
+    def spawn_console(self, name: str):
+        if name in self.consoles:
+            print(f'{name} already exists')
+            return
+        console = NotebookConsoleView(self.notebook)
+        self.notebook.add(console.frame, text=name)
+        self.consoles[name] = console
+        return console
 
     def remove_server(self, name: str):
         if name not in self.clients:
@@ -79,5 +98,3 @@ class ApplicationView:
         self.notebook.add(client.frame, text=name)
         self.clients[name] = client
         return client
-
-
