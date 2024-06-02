@@ -44,9 +44,9 @@ class NotebookConsoleView:
         self.textbox_chat = tk.Text(self.frame_chat)
         self.textbox_chat.grid(style.GRID_CNF)
 
-    def insert_console(self, text: str):
+    def write_console(self, text: str):
         try:
-            self.textbox_chat.insert(tk.INSERT, text)
+            self.textbox_chat.insert('1.0', text)
         except:
             pass
 

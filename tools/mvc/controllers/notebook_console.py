@@ -19,7 +19,7 @@ class NotebookConsoleController:
         self.console.button_stop.config(command=lambda: self.stop_thread())
 
     def log_info(self, text: str):
-        self.console.insert_console(f'[Info] {text}\n')
+        self.console.write_console(f'[Info] {text}\n')
 
     def open_notebook(self):
         if self.name in self.view.consoles:
