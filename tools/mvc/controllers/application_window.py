@@ -9,6 +9,9 @@ class ApplicationController:
         self.view = view
         self.model = model
 
+        self.view.entry_server_address.insert(0, self.model.server_address)
+        self.view.entry_server_port.insert(0, self.model.server_port)
+
         self._bind()
 
     def _bind(self):
