@@ -60,3 +60,10 @@ class ApplicationView:
         self.notebook.add(console.frame, text=name)
         self.consoles[name] = console
         return console
+
+    def append_console(self, name: str, console: NotebookConsoleView):
+        if name in self.consoles:
+            print(f'{name} already exists')
+            return
+        self.notebook.add(console.frame, text=name)
+        self.consoles[name] = console
