@@ -43,7 +43,11 @@ class MessageProtocolHandler(MessageHandler):
 
     def read_message(self):
         self.can_read = False
-        self.receive_message()
+        message = self.receive_message()
+        if message == '' or message == config.DISCONNECT_MESSAGE:
+            self.is_running = False
+            return
+        self.queues.put(message)
 
     def write_message(self):
         message = self.queues.get()
