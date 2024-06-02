@@ -13,7 +13,7 @@ from networking.threads import SimpleThread
 class ServerThread(SimpleThread):
     def __init__(self):
         super().__init__()
-        self.server = ServerSocketHandler(self.name)
+        self.server = ServerSocketHandler(self.name, self.queues)
 
     def run(self) -> None:
         self.server.logger.log_debug('Starting host server')
@@ -30,14 +30,16 @@ class ServerThread(SimpleThread):
 
 
 class ServerSocketHandler:
-    def __init__(self, name: str):
+    def __init__(self, name: str, queues: SimpleQueue):
         super().__init__()
+        self.queues = queues.connect()
         self.logger = SimpleLogger(f'[Server] [{name}]')
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.sockets_list: List[socket.socket] = [self.socket]
         self.clients_dict: Dict[socket.socket, MessageProtocolHandler] = {}
         self.clients_info: Dict[socket.socket, Tuple[str, int]] = {}
+        self.queues_dict: Dict[socket.socket, SimpleQueue] = {}
 
     def start(self):
         self.socket.bind(config.ADDRESS)
@@ -56,6 +58,22 @@ class ServerSocketHandler:
         sockets = select.select(sockets_list, sockets_list, sockets_list, 0.5)
         read_sockets, write_sockets, error_sockets = sockets
         notified_protocols: Set[MessageProtocolHandler] = set()
+
+        # Read queue messages from other thread into protocol queues
+        messages = []
+        message_out = self.queues.get()
+        while message_out is not None:
+            messages.append(message_out)
+            message_out = self.queues.get()
+
+        # Read and write messages from protocol queues
+        for queues in self.queues_dict.values():
+            message_in = queues.get()
+            while message_in is not None:
+                self.queues.put(message_in)
+                message_in = queues.get()
+            for message_out in messages:
+                queues.put(message_out)
 
         # Enable client socket read operation
         for notified_socket in read_sockets:
@@ -102,6 +120,7 @@ class ServerSocketHandler:
         self.sockets_list.append(client)
         self.clients_info[client] = address
         self.clients_dict[client] = protocol
+        self.queues_dict[client] = queues
         self.logger.log_info(f'Accepted client handler at port {address[1]}')
 
     def close_client(self, client: socket.socket):
