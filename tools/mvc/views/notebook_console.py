@@ -20,14 +20,14 @@ class NotebookConsoleView:
         self.entry_message = tk.Entry(self.frame_control)
         self.entry_message.grid(GRID_CNF, row=0, column=0, columnspan=3)
 
-        self.button_send_message = tk.Button(self.frame_control, text='Send message')
-        self.button_send_message.grid(GRID_CNF, row=0, column=3)
+        self.button_send = tk.Button(self.frame_control, text='Send')
+        self.button_send.grid(GRID_CNF, row=0, column=3)
 
-        self.button_start_server = tk.Button(self.frame_control, text='Start connection')
-        self.button_start_server.grid(GRID_CNF, row=0, column=4)
+        self.button_start = tk.Button(self.frame_control, text='Start')
+        self.button_start.grid(GRID_CNF, row=0, column=4)
 
-        self.button_stop_server = tk.Button(self.frame_control, text='Stop connection')
-        self.button_stop_server.grid(GRID_CNF, row=0, column=5)
+        self.button_stop = tk.Button(self.frame_control, text='Stop')
+        self.button_stop.grid(GRID_CNF, row=0, column=5)
 
         self.button_close = tk.Button(self.frame_control, text='Close')
         self.button_close.grid(GRID_CNF, row=0, column=8)

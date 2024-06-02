@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from typing import Dict
 
 from mvc.views.notebook_console import NotebookConsoleView
-from mvc.views.view_style import GRID_CNF, PADDING_CNF
+from mvc.views.view_style import GRID_CNF, PADDING_CNF, LABEL_CNF
 
 
 class ApplicationView:
@@ -13,7 +13,7 @@ class ApplicationView:
         self.root.grid_columnconfigure(index=1, weight=1)
         self.root.grid_rowconfigure(index=0, weight=1)
 
-        self.frame_consoles = tk.LabelFrame(self.root, text='Console')
+        self.frame_consoles = tk.LabelFrame(self.root, PADDING_CNF, text='Console')
         self.frame_consoles.grid(GRID_CNF, row=0, column=1)
         self.frame_consoles.grid_rowconfigure(index=0, weight=1)
         self.frame_consoles.grid_columnconfigure(index=0, weight=1)
@@ -21,17 +21,17 @@ class ApplicationView:
         self.notebook = ttk.Notebook(self.frame_consoles)
         self.notebook.grid(GRID_CNF)
 
-        self.frame_settings = tk.LabelFrame(self.root, text='Settings')
+        self.frame_settings = tk.LabelFrame(self.root, PADDING_CNF, text='Settings')
         self.frame_settings.grid(GRID_CNF, row=0, column=0)
 
         self.label_server_address = tk.Label(self.frame_settings, text='Address')
-        self.label_server_address.grid(GRID_CNF, row=0, column=0)
+        self.label_server_address.grid(LABEL_CNF, row=0, column=0)
 
         self.entry_server_address = tk.Entry(self.frame_settings)
         self.entry_server_address.grid(GRID_CNF, row=0, column=1, columnspan=2)
 
         self.label_server_port = tk.Label(self.frame_settings, text='Port')
-        self.label_server_port.grid(GRID_CNF, row=1, column=0)
+        self.label_server_port.grid(LABEL_CNF, row=1, column=0)
 
         self.entry_server_port = tk.Entry(self.frame_settings)
         self.entry_server_port.grid(GRID_CNF, row=1, column=1, columnspan=2)

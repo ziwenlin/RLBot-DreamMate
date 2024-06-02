@@ -6,3 +6,6 @@ GRID_CNF = {
 PADDING_CNF = {
     'padx': 5, 'pady': 5
 }
+LABEL_CNF = {
+    'sticky': tk.W
+}
