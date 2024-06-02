@@ -17,6 +17,32 @@ class NotebookConsoleController:
         self.console.button_close.config(command=lambda: self.close_notebook())
         self.console.button_start.config(command=lambda: self.start_thread())
         self.console.button_stop.config(command=lambda: self.stop_thread())
+        self.console.button_send.config(command=lambda: self.send_message())
+
+        self.console.entry_message.bind('<Return>', lambda e: self.send_message())
+        self.console.frame.after(1000, self.receive_message)
+
+    def receive_message(self):
+        message = self.thread.queues.get()
+        while message is not None:
+            self.log_message_incoming(message)
+            message = self.thread.queues.get()
+        self.console.frame.after(1000, self.receive_message)
+
+    def send_message(self):
+        message = self.console.read_message_entry()
+        if message == '':
+            self.log_info('Message is empty')
+            return
+        self.thread.queues.put(message)
+        self.log_message_outgoing(message)
+        # self.console.clear_message()
+
+    def log_message_incoming(self, text: str):
+        self.console.write_console(f'[Chat] <<< {text}\n')
+
+    def log_message_outgoing(self, text: str):
+        self.console.write_console(f'[Chat] >>> {text}\n')
 
     def log_info(self, text: str):
         self.console.write_console(f'[Info] {text}\n')
