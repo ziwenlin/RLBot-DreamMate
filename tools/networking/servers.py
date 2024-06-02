@@ -1,24 +1,23 @@
-import select
 import socket
-import threading
 from typing import List, Dict, Tuple, Set
+
+import select
 
 from networking import configuration as config
 from networking.logger import SimpleLogger
 from networking.protocol import MessageProtocolHandler
 from networking.queues import SimpleQueue
+from networking.threads import SimpleThread
 
 
-class ServerThread(threading.Thread):
+class ServerThread(SimpleThread):
     def __init__(self):
         super().__init__()
         self.server = ServerSocketHandler(self.name)
-        self.running = threading.Event()
 
     def run(self) -> None:
         self.server.logger.log_debug('Starting host server')
         self.server.start()
-        self.running.set()
         while self.running.is_set() is True:
             self.server.main()
         self.server.stop()
@@ -26,8 +25,7 @@ class ServerThread(threading.Thread):
 
     def stop(self):
         self.server.logger.log_debug('Stopping host server')
-        self.running.clear()
-        self.join()
+        super().stop()
         self.server.logger.log_debug('Shutdown completed')
 
 
