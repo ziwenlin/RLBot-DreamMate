@@ -44,6 +44,15 @@ class NotebookConsoleView:
         self.textbox_chat = tk.Text(self.frame_chat)
         self.textbox_chat.grid(style.GRID_CNF)
 
+    def read_message_entry(self):
+        return self.entry_message.get()
+
+    def clear_message_entry(self):
+        try:
+            self.entry_message.delete(0, tk.END)
+        except:
+            pass
+
     def write_console(self, text: str):
         try:
             self.textbox_chat.insert('1.0', text)
