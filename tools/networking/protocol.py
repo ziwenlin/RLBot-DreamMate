@@ -41,7 +41,7 @@ class MessageProtocolHandler(MessageHandler):
 
         self.queues = queues.connect()
 
-    def read_message(self):
+    def _read_message(self):
         self.can_read = False
         message = self.receive_message()
         if message == '' or message == config.DISCONNECT_MESSAGE:
@@ -49,7 +49,7 @@ class MessageProtocolHandler(MessageHandler):
             return
         self.queues.put(message)
 
-    def write_message(self):
+    def _write_message(self):
         message = self.queues.get()
         if message is None:
             return
@@ -62,6 +62,6 @@ class MessageProtocolHandler(MessageHandler):
             self.socket.close()
             return
         if self.can_write is True:
-            self.write_message()
+            self._write_message()
         if self.can_read is True:
-            self.read_message()
+            self._read_message()
