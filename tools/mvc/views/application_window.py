@@ -3,44 +3,44 @@ import tkinter.ttk as ttk
 from typing import Dict
 
 from mvc.views.notebook_console import NotebookConsoleView
-from mvc.views.view_style import GRID_CNF, PADDING_CNF, LABEL_CNF
+import mvc.view_styles as style
 
 
 class ApplicationView:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.config(PADDING_CNF)
+        self.root.config(style.PADDING_CNF)
         self.root.grid_columnconfigure(index=1, weight=1)
         self.root.grid_rowconfigure(index=0, weight=1)
 
-        self.frame_consoles = tk.LabelFrame(self.root, PADDING_CNF, text='Console')
-        self.frame_consoles.grid(GRID_CNF, row=0, column=1)
+        self.frame_consoles = tk.LabelFrame(self.root, style.PADDING_CNF, text='Console')
+        self.frame_consoles.grid(style.GRID_CNF, row=0, column=1)
         self.frame_consoles.grid_rowconfigure(index=0, weight=1)
         self.frame_consoles.grid_columnconfigure(index=0, weight=1)
 
         self.notebook = ttk.Notebook(self.frame_consoles)
-        self.notebook.grid(GRID_CNF)
+        self.notebook.grid(style.GRID_CNF)
 
-        self.frame_settings = tk.LabelFrame(self.root, PADDING_CNF, text='Settings')
-        self.frame_settings.grid(GRID_CNF, row=0, column=0)
+        self.frame_settings = tk.LabelFrame(self.root, style.PADDING_CNF, text='Settings')
+        self.frame_settings.grid(style.GRID_CNF, row=0, column=0)
 
         self.label_server_address = tk.Label(self.frame_settings, text='Address')
-        self.label_server_address.grid(LABEL_CNF, row=0, column=0)
+        self.label_server_address.grid(style.LABEL_CNF, row=0, column=0)
 
         self.entry_server_address = tk.Entry(self.frame_settings)
-        self.entry_server_address.grid(GRID_CNF, row=0, column=1, columnspan=2)
+        self.entry_server_address.grid(style.GRID_CNF, row=0, column=1, columnspan=2)
 
         self.label_server_port = tk.Label(self.frame_settings, text='Port')
-        self.label_server_port.grid(LABEL_CNF, row=1, column=0)
+        self.label_server_port.grid(style.LABEL_CNF, row=1, column=0)
 
         self.entry_server_port = tk.Entry(self.frame_settings)
-        self.entry_server_port.grid(GRID_CNF, row=1, column=1, columnspan=2)
+        self.entry_server_port.grid(style.GRID_CNF, row=1, column=1, columnspan=2)
 
         self.button_spawn_server = tk.Button(self.frame_settings, text='Spawn Server')
-        self.button_spawn_server.grid(GRID_CNF, row=3, column=1)
+        self.button_spawn_server.grid(style.GRID_CNF, row=3, column=1)
 
         self.button_spawn_client = tk.Button(self.frame_settings, text='Spawn Client')
-        self.button_spawn_client.grid(GRID_CNF, row=3, column=2)
+        self.button_spawn_client.grid(style.GRID_CNF, row=3, column=2)
 
         self.consoles: Dict[str, NotebookConsoleView] = {}
 
