@@ -1,5 +1,8 @@
 from typing import Dict
 
+from mvc.controllers.client_console import ClientConsoleController
+from mvc.controllers.notebook_console import NotebookConsoleController
+from mvc.controllers.server_console import ServerConsoleController
 from mvc.models.application_window import ApplicationModel
 from mvc.views.application_window import ApplicationView
 
@@ -12,6 +15,7 @@ class ApplicationController:
         self.view.entry_server_address.insert(0, self.model.server_address)
         self.view.entry_server_port.insert(0, self.model.server_port)
 
+        self.notebook_controllers: Dict[str, NotebookConsoleController] = {}
         self._bind()
 
     def _bind(self):
@@ -24,23 +28,34 @@ class ApplicationController:
 
     def run(self):
         self.view.root.mainloop()
+        for name, notebook in self.notebook_controllers.items():
+            notebook.stop_thread()
 
     def create_server(self):
-        name = self._create_unique_console_name('Server')
-        self.view.spawn_console(name)
-        self._bind_console(name)
+        if self._is_address_and_port_valid() is False:
+            return
+        address, port = self._get_address_and_port()
+        name = f'Server {address}:{port}'
+        if name in self.notebook_controllers:
+            self.notebook_controllers[name].open_notebook()
+            return
+        self.notebook_controllers[name] = ServerConsoleController(self.view, self.model, name)
 
     def create_client(self):
-        name = self._create_unique_console_name('Client')
-        self.view.spawn_console(name)
-        self._bind_console(name)
+        address, port = self._get_address_and_port()
+        name = f'Client {address}:{port}'
+        unique_name = self._create_unique_console_name(name)
+        if unique_name in self.notebook_controllers:
+            self.notebook_controllers[unique_name].open_notebook()
+            return
+        self.notebook_controllers[unique_name] = ClientConsoleController(self.view, self.model, unique_name)
 
     def _create_unique_console_name(self, name: str):
         consoles = self.view.consoles
         if name not in consoles:
             return name
         for index in range(10):
-            name_indexed = f'{name} {index + 1}'
+            name_indexed = f'{name} [{index + 1}]'
             if name_indexed in consoles:
                 continue
             return name_indexed
