@@ -29,6 +29,10 @@ class NotebookConsoleView:
         self.button_stop = tk.Button(self.frame_control, text='Stop')
         self.button_stop.grid(style.GRID_CNF, row=0, column=5)
 
+        self.button_clear = tk.Button(self.frame_control, text='Clear')
+        self.button_clear.grid(style.GRID_CNF, row=0, column=7)
+        self.button_clear.config(command=self.clear_console)
+
         self.button_close = tk.Button(self.frame_control, text='Close')
         self.button_close.grid(style.GRID_CNF, row=0, column=8)
 
@@ -39,3 +43,15 @@ class NotebookConsoleView:
 
         self.textbox_chat = tk.Text(self.frame_chat)
         self.textbox_chat.grid(style.GRID_CNF)
+
+    def insert_console(self, text: str):
+        try:
+            self.textbox_chat.insert(tk.INSERT, text)
+        except:
+            pass
+
+    def clear_console(self):
+        try:
+            self.textbox_chat.delete('1.0', tk.END)
+        except:
+            pass
