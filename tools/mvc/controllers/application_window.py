@@ -45,3 +45,14 @@ class ApplicationController:
                 continue
             return name_indexed
         return name
+
+    def _get_address_and_port(self):
+        address = self.view.entry_server_address.get()
+        port = self.view.entry_server_port.get()
+        return address, port
+
+    def _is_address_and_port_valid(self):
+        address, port = self._get_address_and_port()
+        if address == '' and port == '':
+            return False
+        return True
